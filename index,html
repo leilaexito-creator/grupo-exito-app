@@ -1437,6 +1437,8 @@
         let previsaoPagamentos = {};
         let previsaoRecebimentos = {};
         let previsoesDespesas = {};
+        let saldosAnterioresFluxo = {}; // Saldos anteriores editáveis do Fluxo de Caixa
+        let saldosAnterioresParceiros = {}; // Saldos anteriores editáveis da Planilha de Parceiros
         let contasLeila = [];
         let despesasLeila = [];
         let funcionariosParceiros = [];
@@ -1478,15 +1480,36 @@
                 contasLeila = parsed.contasLeila || [];
                 despesasLeila = parsed.despesasLeila || [];
                 funcionariosParceiros = parsed.funcionariosParceiros || [];
+                saldosAnterioresFluxo = parsed.saldosAnterioresFluxo || {};
+                saldosAnterioresParceiros = parsed.saldosAnterioresParceiros || {};
             }
             atualizarSelects();
             atualizarDashboard();
         }
 
+        // 📌 POPULAR SELETOR DE PARCEIROS NO RELATÓRIO DE RECEBIMENTOS
+        function preencherSelectorParceiros() {
+            const select = document.getElementById('parceiroRelatorioRecebimentos');
+            if (!select) return;
+            
+            // Limpar opções existentes (manter TODOS)
+            const opcaoTodos = select.querySelector('option[value="TODOS"]');
+            select.innerHTML = '';
+            select.appendChild(opcaoTodos);
+            
+            // Adicionar cada parceiro
+            parceiros.forEach(parceiro => {
+                const option = document.createElement('option');
+                option.value = parceiro.id || parceiro.nome;
+                option.textContent = parceiro.nome;
+                select.appendChild(option);
+            });
+        }
+
         // Salvar dados no localStorage
         function salvarDados() {
             localStorage.setItem('grupoExitoDados', JSON.stringify({
-                clientes, parceiros, fluxoCaixa, planilhaParceiros, previsoes, previsaoPagamentos, contasLeila, despesasLeila, funcionariosParceiros
+                clientes, parceiros, fluxoCaixa, planilhaParceiros, previsoes, previsaoPagamentos, contasLeila, despesasLeila, funcionariosParceiros, saldosAnterioresFluxo, saldosAnterioresParceiros
             }));
         }
 
@@ -1778,25 +1801,33 @@
             const tbody = document.getElementById('fluxoTable');
             tbody.innerHTML = '';
             
-            // Buscar saldo anterior do mês anterior
+            // Buscar saldo anterior do mês anterior OU saldo manual
             let saldoAnterior = 0;
-            const mesAnterior = new Date(mes + '-01');
-            mesAnterior.setMonth(mesAnterior.getMonth() - 1);
-            const mesAnteriorStr = mesAnterior.toISOString().slice(0, 7);
-            const fluxoMesAnterior = fluxoCaixa.filter(f => f.mes === mesAnteriorStr);
-            if (fluxoMesAnterior.length > 0) {
-                let saldoFinalAnterior = 0;
-                fluxoMesAnterior.forEach(f => {
-                    saldoFinalAnterior += f.credito - f.debito - f.despesasEscritorio - f.retiradasLeila;
-                });
-                saldoAnterior = saldoFinalAnterior;
+            
+            // Verificar se há saldo manual salvo para este mês
+            if (!saldosAnterioresFluxo) saldosAnterioresFluxo = {};
+            if (saldosAnterioresFluxo[mes] !== undefined) {
+                saldoAnterior = saldosAnterioresFluxo[mes];
+            } else {
+                // Calcular automaticamente do mês anterior
+                const mesAnterior = new Date(mes + '-01');
+                mesAnterior.setMonth(mesAnterior.getMonth() - 1);
+                const mesAnteriorStr = mesAnterior.toISOString().slice(0, 7);
+                const fluxoMesAnterior = fluxoCaixa.filter(f => f.mes === mesAnteriorStr);
+                if (fluxoMesAnterior.length > 0) {
+                    let saldoFinalAnterior = 0;
+                    fluxoMesAnterior.forEach(f => {
+                        saldoFinalAnterior += f.credito - f.debito - f.despesasEscritorio - f.retiradasLeila;
+                    });
+                    saldoAnterior = saldoFinalAnterior;
+                }
             }
             
-            // Adicionar linha de saldo anterior
+            // Adicionar linha de saldo anterior EDITÁVEL
             tbody.innerHTML += `
                 <tr style="background-color: #f0f0f0; font-weight: bold;">
-                    <td colspan="8"><strong>SALDO ANTERIOR:</strong></td>
-                    <td>R$ ${saldoAnterior.toFixed(2).replace('.', ',')}</td>
+                    <td colspan="8"><strong>SALDO ANTERIOR:</strong> <small style="color: #666;">(editável)</small></td>
+                    <td><input type="number" value="${saldoAnterior.toFixed(2)}" step="0.01" onchange="atualizarSaldoAnteriorFluxo('${mes}', this.value)" style="width: 120px; font-weight: bold; background: #fff3cd; border: 2px solid #ffc107; padding: 5px; border-radius: 3px;"></td>
                     <td></td>
                 </tr>
             `;
@@ -1974,18 +2005,27 @@
             const parceiro = parceiros.find(p => p.id == parceiroId);
             const fluxoMes = fluxoCaixa.filter(f => f.mes === mes).sort((a, b) => new Date(a.data || 0) - new Date(b.data || 0));
             
-            // Buscar saldo anterior do mês anterior
+            // Buscar saldo anterior do mês anterior OU saldo manual
             let saldoAnterior = 0;
-            const mesAnterior = new Date(mes + '-01');
-            mesAnterior.setMonth(mesAnterior.getMonth() - 1);
-            const mesAnteriorStr = mesAnterior.toISOString().slice(0, 7);
-            const fluxoMesAnterior = fluxoCaixa.filter(f => f.mes === mesAnteriorStr);
-            if (fluxoMesAnterior.length > 0) {
-                let saldoFinalAnterior = 0;
-                fluxoMesAnterior.forEach(f => {
-                    saldoFinalAnterior += f.credito - f.debito - f.despesasEscritorio - f.retiradasLeila;
-                });
-                saldoAnterior = saldoFinalAnterior;
+            
+            // Verificar se há saldo manual salvo para este parceiro e mês
+            if (!saldosAnterioresParceiros) saldosAnterioresParceiros = {};
+            const chave = `${parceiroId}_${mes}`;
+            if (saldosAnterioresParceiros[chave] !== undefined) {
+                saldoAnterior = saldosAnterioresParceiros[chave];
+            } else {
+                // Calcular automaticamente do mês anterior
+                const mesAnterior = new Date(mes + '-01');
+                mesAnterior.setMonth(mesAnterior.getMonth() - 1);
+                const mesAnteriorStr = mesAnterior.toISOString().slice(0, 7);
+                const fluxoMesAnterior = fluxoCaixa.filter(f => f.mes === mesAnteriorStr);
+                if (fluxoMesAnterior.length > 0) {
+                    let saldoFinalAnterior = 0;
+                    fluxoMesAnterior.forEach(f => {
+                        saldoFinalAnterior += f.credito - f.debito - f.despesasEscritorio - f.retiradasLeila;
+                    });
+                    saldoAnterior = saldoFinalAnterior;
+                }
             }
 
             let html = `
@@ -2006,21 +2046,34 @@
                         <tbody id="planilhaParceiro_${parceiroId}">
             `;
 
-            // Linha de saldo anterior
+            // Linha de saldo anterior EDITÁVEL
             html += `
                     <tr style="background-color: #f0f0f0; font-weight: bold;">
                         <td>-</td>
-                        <td>SALDO ANTERIOR</td>
+                        <td>SALDO ANTERIOR <small style="color: #666;">(editável)</small></td>
                         <td>-</td>
                         <td>-</td>
-                        <td>R$ ${saldoAnterior.toFixed(2).replace('.', ',')}</td>
+                        <td><input type="number" value="${saldoAnterior.toFixed(2)}" step="0.01" onchange="atualizarSaldoAnteriorParceiro('${parceiroId}', '${mes}', this.value)" style="width: 120px; font-weight: bold; background: #fff3cd; border: 2px solid #ffc107; padding: 5px; border-radius: 3px;"></td>
                         <td>-</td>
                     </tr>
             `;
 
             let saldoAtual = saldoAnterior;
             const clientesParceiro = clientes.filter(c => c.parceiro == parceiroId);
-            const valorRateio = parseFloat(document.getElementById('valorPorParceiro').textContent.replace('R$ ', '').replace(',', '.')) || 0;
+            
+            // Calcular rateio de despesas do escritório diretamente do fluxo de caixa
+            let totalReceitaEscritorio = 0;
+            let totalDespesasEscritorio = 0;
+            
+            fluxoMes.forEach(f => {
+                totalReceitaEscritorio += f.receitaEscritorio || 0;
+                totalDespesasEscritorio += f.despesasEscritorio || 0;
+            });
+            
+            // Pegar o número de parceiros do campo manual do Fluxo de Caixa
+            const numParceiros = parseInt(document.getElementById('numParceiros')?.value) || parceiros.length || 1;
+            const totalRatear = totalDespesasEscritorio - totalReceitaEscritorio;
+            const valorRateio = totalRatear / numParceiros;
 
             // Processar lancamentos automaticos da Planilha de Parceiros (REGRA 1 e REGRA 2)
             const lancamentosParceiro = planilhaParceiros.filter(l => l.parceiroId == parceiroId);
@@ -2067,7 +2120,7 @@
                 html += `
                     <tr>
                         <td>-</td>
-                        <td><input type="text" value="Rateio - Despesas do Escritório" onchange="atualizarMovimentoParceiro(${parceiroId}, this, 'descricao')"></td>
+                        <td>Rateio das Despesas do Escritório</td>
                         <td><input type="number" value="${valorRateio.toFixed(2)}" step="0.01" onchange="atualizarMovimentoParceiro(${parceiroId}, this, 'debito')"></td>
                         <td>-</td>
                         <td>R$ ${saldoAtual.toFixed(2).replace('.', ',')}</td>
@@ -3073,74 +3126,60 @@
             atualizarTabelaFuncionarios();
         }
 
-        // CLIENTES INADIMPLENTES (BASEADO EM CADASTRO DE CLIENTES)
+        // CLIENTES INADIMPLENTES (PUXANDO DA PREVISÃO DE RECEBIMENTOS)
         function atualizarTabelaClientesInadimplentes() {
             const tbody = document.getElementById('inadimplentesTable');
             if (!tbody) return;
 
             tbody.innerHTML = '';
-            const hoje = new Date();
-
-            clientes.forEach(cliente => {
-                if (!cliente.diaVencimento) return;
-
-                // 📌 CALCULAR VENCIMENTO PARA CADA MÊS ATÉ ENCONTRAR UM EM ATRASO
-                let vencimento = null;
-                let encontrouAtraso = false;
-
-                // Verificar os últimos 12 meses
-                for (let i = 0; i < 12; i++) {
-                    const dataTemp = new Date(hoje);
-                    dataTemp.setMonth(dataTemp.getMonth() - i);
-                    
-                    const ano = dataTemp.getFullYear();
-                    const mes = dataTemp.getMonth();
-                    
-                    let vencTemp = new Date(ano, mes, cliente.diaVencimento);
-                    
-                    // Ajustar último dia do mês
-                    if (vencTemp.getMonth() !== mes) {
-                        vencTemp = new Date(ano, mes + 1, 0);
+            
+            // 📌 PUXAR DADOS DIRETAMENTE DA TABELA DE PREVISÃO DE RECEBIMENTOS
+            const previsaoTable = document.getElementById('previsaoRecebimentosTable');
+            if (!previsaoTable) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #999;">✅ Nenhum cliente inadimplente</td></tr>';
+                return;
+            }
+            
+            const rows = previsaoTable.querySelectorAll('tbody tr');
+            let temAtraso = false;
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length < 4) return;
+                
+                // Pegar o número de dias em atraso (coluna 3)
+                const diasAtrasoText = cells[3].textContent.trim();
+                const diasAtraso = parseInt(diasAtrasoText);
+                
+                // Se não está em atraso, pula
+                if (diasAtraso <= 0) return;
+                
+                temAtraso = true;
+                
+                // Copiar a linha para a tabela de inadimplentes
+                const novaLinha = document.createElement('tr');
+                novaLinha.style.backgroundColor = '#fff3cd';
+                
+                // Copiar as colunas
+                for (let i = 0; i < 5; i++) {
+                    const novaCell = document.createElement('td');
+                    if (i === 4) {
+                        // Status com emoji
+                        novaCell.innerHTML = `<span style="color:#ff6b6b;">🚨 ${diasAtraso} dias em atraso</span>`;
+                    } else {
+                        novaCell.textContent = cells[i].textContent;
                     }
-                    
-                    // Se este vencimento está no passado (em atraso)
-                    if (hoje > vencTemp) {
-                        vencimento = vencTemp;
-                        encontrouAtraso = true;
-                        break;
-                    }
+                    novaLinha.appendChild(novaCell);
                 }
-
-                // Se não encontrou atraso, pula
-                if (!encontrouAtraso || !vencimento) return;
-
-                // 📌 VERIFICAR SE FOI RECEBIDO NO FLUXO DE CAIXA (APÓS O VENCIMENTO)
-                const jaRecebido = fluxoCaixa.some(f => {
-                    const dataFluxo = new Date(f.data.split('/').reverse().join('-'));
-                    return f.credito > 0 && 
-                           dataFluxo > vencimento &&
-                           f.descricao.toLowerCase().includes(cliente.razaoSocial.toLowerCase());
-                });
-
-                // Se pagou, não é inadimplente
-                if (jaRecebido) return;
-
-                // 📌 DIAS DE ATRASO
-                const diasAtraso = Math.floor((hoje - vencimento) / (1000 * 60 * 60 * 24));
-
-                tbody.innerHTML += `
-                    <tr style="background-color:#fff3cd;">
-                        <td>${cliente.razaoSocial}</td>
-                        <td>R$ ${cliente.valorContrato.toFixed(2).replace('.', ',')}</td>
-                        <td>${formatarData(vencimento)}</td>
-                        <td>${diasAtraso}</td>
-                        <td><span style="color:#ff6b6b;">🚨 ${diasAtraso} dias em atraso</span></td>
-                    </tr>
-                `;
+                
+                tbody.appendChild(novaLinha);
             });
+            
+            if (!temAtraso) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #999;">✅ Nenhum cliente inadimplente</td></tr>';
+            }
         }
 
-        
         function atualizarTabelaInadimplentes() {
             atualizarTabelaClientesInadimplentes();
         }
@@ -4336,6 +4375,24 @@
             atualizarFluxo();
 
             alert(`✅ Pagamento de ${descricao} marcado como pago!`);
+        }
+
+        // 🆕 FUNÇÕES PARA ATUALIZAR SALDOS ANTERIORES EDITÁVEIS
+        function atualizarSaldoAnteriorFluxo(mes, valor) {
+            const valorNumerico = parseFloat(valor) || 0;
+            saldosAnterioresFluxo[mes] = valorNumerico;
+            salvarDados();
+            atualizarFluxo();
+            console.log(`Saldo anterior do Fluxo de Caixa atualizado para ${mes}: R$ ${valorNumerico.toFixed(2)}`);
+        }
+
+        function atualizarSaldoAnteriorParceiro(parceiroId, mes, valor) {
+            const valorNumerico = parseFloat(valor) || 0;
+            const chave = `${parceiroId}_${mes}`;
+            saldosAnterioresParceiros[chave] = valorNumerico;
+            salvarDados();
+            carregarPlanilhaParceiro();
+            console.log(`Saldo anterior da Planilha de Parceiro atualizado para ${chave}: R$ ${valorNumerico.toFixed(2)}`);
         }
     </script>
 </body>
