@@ -1,0 +1,4342 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grupo Êxito - Sistema Financeiro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-header h1 {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .app-header {
+            position: relative;
+        }
+
+        .tabs-navigation {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px 20px;
+            background-color: white;
+            border-bottom: 2px solid #e0e0e0;
+            overflow-x: auto;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #f0f0f0;
+            color: #333;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            background-color: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .app-content {
+            flex: 1;
+            padding: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stats-card h3 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .stats-card .value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background-color: #ff6b6b;
+            color: white;
+            padding: 5px 10px;
+            font-size: 0.9em;
+        }
+
+        .btn-danger:hover {
+            background-color: #ff5252;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 0.85em;
+        }
+
+        .excel-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .excel-table thead {
+            background-color: #667eea;
+            color: white;
+        }
+
+        .excel-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border: 1px solid #ddd;
+        }
+
+        .excel-table td {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+        }
+
+        .excel-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .excel-table input {
+            width: 100%;
+            border: none;
+            padding: 5px;
+            font-size: 0.95em;
+            background-color: transparent;
+        }
+
+        .excel-table input:focus {
+            background-color: #fffacd;
+            outline: none;
+            border: 1px solid #ffc107;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .table thead {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .alert-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+
+        .alert-box.danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .alert-box h3 {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .alert-item {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background-color: white;
+            border-top: 2px solid #e0e0e0;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+            gap: 20px;
+        }
+
+        .nav-button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+        }
+
+        .nav-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #ccc;
+        }
+
+        .page-indicator {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            flex: 1;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-message {
+            padding: 10px 15px;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+
+        .chat-message.user {
+            background-color: #667eea;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .chat-message.bot {
+            background-color: #e0e0e0;
+            color: #333;
+            align-self: flex-start;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .chat-input-area button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .mes-competencia {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .tabs-navigation {
+                overflow-x: auto;
+            }
+        }
+    
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .login-box .form-group {
+            margin-bottom: 20px;
+        }
+
+        .login-box label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .login-box button:hover {
+            transform: translateY(-2px);
+        }
+
+        .login-error {
+            color: #d32f2f;
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 5px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        
+        .login-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .login-tab {
+            padding: 12px 24px;
+            background: #f0f0f0;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .login-tab:hover {
+            background: #e0e0e0;
+        }
+
+        .login-tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .login-tab-content {
+            display: none;
+        }
+
+        .login-tab-content.active {
+            display: block;
+        }
+
+        
+        .auth-buttons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .auth-btn {
+            padding: 10px 20px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .auth-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .auth-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .auth-modal.active {
+            display: flex;
+        }
+
+        .auth-modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .auth-modal-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .auth-modal-tab {
+            padding: 12px 24px;
+            background: #f0f0f0;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            flex: 1;
+            text-align: center;
+        }
+
+        .auth-modal-tab:hover {
+            background: #e0e0e0;
+        }
+
+        .auth-modal-tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .auth-modal-form {
+            display: none;
+        }
+
+        .auth-modal-form.active {
+            display: block;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        </style>
+</head>
+<body>
+    <!-- Modal de Autenticação -->
+    <div id="authModal" class="auth-modal">
+        <div class="auth-modal-content">
+            <span class="close-modal" onclick="fecharModalAuth()">&times;</span>
+            
+            <div class="auth-modal-tabs">
+                <button class="auth-modal-tab active" onclick="trocarAbaAuth('entrar')">🔓 Entrar</button>
+                <button class="auth-modal-tab" onclick="trocarAbaAuth('cadastro')">📝 Cadastro</button>
+            </div>
+
+            <!-- Formulário Entrar -->
+            <form id="formEntrar" class="auth-modal-form active" onsubmit="fazerLogin(); return false;">
+                <div id="loginError" class="login-error hidden"></div>
+                <div class="form-group">
+                    <label>Usuário</label>
+                    <input type="text" id="loginUser" placeholder="Seu usuário" required>
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="loginPassword" placeholder="Sua senha" required>
+                </div>
+                <button type="submit" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; font-size: 1em; font-weight: bold; cursor: pointer;">Entrar</button>
+                <p style="text-align: center; margin-top: 15px; color: #999; font-size: 0.85em;">
+                    Demo: admin/admin ou parceiro1/123456
+                </p>
+            </form>
+
+            <!-- Formulário Cadastro -->
+            <form id="formCadastro" class="auth-modal-form" onsubmit="fazerCadastro(); return false;">
+                <div id="cadastroError" class="login-error hidden"></div>
+                <div id="cadastroSucesso" style="display: none; color: #2e7d32; text-align: center; margin-bottom: 15px; padding: 10px; background-color: #e8f5e9; border-radius: 5px;"></div>
+                <div class="form-group">
+                    <label>Nome do Parceiro</label>
+                    <input type="text" id="cadastroNome" placeholder="Seu nome completo" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="cadastroEmail" placeholder="seu@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Usuário</label>
+                    <input type="text" id="cadastroUser" placeholder="Escolha um usuário" required>
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="cadastroPassword" placeholder="Escolha uma senha" required>
+                </div>
+                <button type="submit" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; font-size: 1em; font-weight: bold; cursor: pointer;">Cadastrar</button>
+            </form>
+        </div>
+    </div>
+
+
+    <div class="app">
+        <header class="app-header">
+            <h1>Grupo Êxito - Sistema Financeiro</h1>
+            <div class="auth-buttons" id="authButtons">
+                <button class="auth-btn" onclick="abrirModalAuth('entrar')">🔓 Entrar</button>
+                <button class="auth-btn" onclick="abrirModalAuth('cadastro')">📝 Cadastro</button>
+            </div>
+        </header>
+
+        <nav class="tabs-navigation">
+            <button class="tab-button active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+            <button class="tab-button" onclick="switchTab('clientes')">👥 Cadastro de Clientes</button>
+            <button class="tab-button" onclick="switchTab('parceiros')">🤝 Cadastro de Parceiros</button>
+            <button class="tab-button" onclick="switchTab('fluxo')">💰 Fluxo de Caixa</button>
+            <button class="tab-button" onclick="switchTab('planilha')">📋 Planilha Parceiros</button>
+
+            <button class="tab-button" onclick="switchTab('contas-leila')">💳 Contas Pendentes Leila</button>
+            <button class="tab-button" onclick="switchTab('previsao-pagamentos')">📋 Previsão de Pagamentos</button>
+            <button class="tab-button" onclick="switchTab('previsao-recebimentos')">📊 Previsão de Recebimentos</button>
+            <button class="tab-button" onclick="switchTab('relatorio-recebimentos')">📅 Relatório de Recebimentos por Data</button>
+            <button class="tab-button" onclick="switchTab('extratos')">📥 Importar Extratos</button>
+            <button class="tab-button" onclick="switchTab('reclamatorias')">⚖️ Reclamatórias</button>
+            <button class="tab-button" onclick="switchTab('despesas-leila')">💸 Relatório de Despesas Dra. Leila</button>
+            <button class="tab-button" onclick="switchTab('despesas-escritorio')">🏢 Despesas do Escritório</button>
+            <button class="tab-button" onclick="switchTab('funcionarios')">👨‍💼 Funcionários Parceiros</button>
+            <button class="tab-button" onclick="switchTab('inadimplentes')">⚠️ Clientes Inadimplentes</button>
+            <button class="tab-button" onclick="switchTab('ia')">🤖 IA "A Poderosa"</button>
+        </nav>
+
+        <main class="app-content">
+            <!-- Dashboard -->
+            <div id="dashboard" class="tab-content active">
+                <div class="card">
+                    <h2>📊 Dashboard</h2>
+                    <div class="grid">
+                        <div class="stats-card">
+                            <h3>Total de Clientes</h3>
+                            <div class="value" id="totalClientes">0</div>
+                        </div>
+                        <div class="stats-card">
+                            <h3>Total de Parceiros</h3>
+                            <div class="value" id="totalParceiros">0</div>
+                        </div>
+                        <div class="stats-card">
+                            <h3>Valor Total de Contratos</h3>
+                            <div class="value" id="totalContratos">R$ 0,00</div>
+                        </div>
+                        <div class="stats-card">
+                            <h3>Saldo Fluxo de Caixa</h3>
+                            <div class="value" id="saldoFluxo">R$ 0,00</div>
+                        </div>
+                    </div>
+                    <div id="alertasInadimplencia"></div>
+                    <div id="alertasContasLeila"></div>
+                </div>
+            </div>
+
+            <!-- Cadastro de Clientes -->
+            <div id="clientes" class="tab-content">
+                <div class="card">
+                    <h2>👥 Cadastro de Clientes</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Razão Social *</label>
+                            <input type="text" id="razaoSocial" placeholder="Nome da empresa">
+                        </div>
+                        <div class="form-group">
+                            <label>Nome Fantasia</label>
+                            <input type="text" id="nomeFantasia" placeholder="Nome fantasia">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>CNPJ</label>
+                            <input type="text" id="cnpj" placeholder="00.000.000/0000-00">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="emailCliente" placeholder="email@empresa.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Valor do Contrato (R$) *</label>
+                            <input type="number" id="valorContrato" placeholder="0,00" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Parceiro Responsável</label>
+                            <select id="parceiroPrincipal">
+                                <option value="">Selecione um parceiro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Data de Fechamento do Contrato</label>
+                            <input type="date" id="dataFechamentoContrato">
+                        </div>
+                        <div class="form-group">
+                            <label>Dia de Vencimento dos Honorários (1-31) *</label>
+                            <input type="number" id="diaVencimentoHonorarios" min="1" max="31" placeholder="Ex: 05, 10, 15">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Retirada Parceiros 100% *</label>
+                            <select id="retiradadaParceiros" onchange="verificarMudancaRetirada100()">
+                                <option value="">Selecione...</option>
+                                <option value="sim">Sim</option>
+                                <option value="não">Não</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="adicionarCliente()">➕ Adicionar Cliente</button>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Razão Social</th>
+                                <th>Nome Fantasia</th>
+                                <th>CNPJ</th>
+                                <th>Email</th>
+                                <th>Valor Contrato</th>
+                                <th>Parceiro</th>
+                                <th>Vencimento Mensal</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientesTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Cadastro de Parceiros -->
+            <div id="parceiros" class="tab-content">
+                <div class="card">
+                    <h2>🤝 Cadastro de Parceiros</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome Completo *</label>
+                            <input type="text" id="nomeParceiro" placeholder="Nome do parceiro">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="emailParceiro" placeholder="email@parceiro.com">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="adicionarParceiro()">➕ Adicionar Parceiro</button>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Data de Cadastro</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="parceirosTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Fluxo de Caixa -->
+            <div id="fluxo" class="tab-content">
+                <div class="card">
+                    <h2>💰 Fluxo de Caixa Geral</h2>
+                    <div class="mes-competencia">
+                        Mês de Competência: <span id="mesCompetenciaFluxo"></span>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label><strong>Selecione o Mês:</strong></label>
+                        <input type="month" id="mesReferencia" onchange="atualizarFluxo()">
+                    </div>
+                    <table class="excel-table">
+                        <thead>
+                            <tr>
+                                <th>Saldo Anterior</th>
+                                <th>Descrição</th>
+                                <th>Débito (R$)</th>
+                                <th>Crédito (R$)</th>
+                                <th>Receita Escritório (R$)</th>
+                                <th>Despesas Escritório (R$)</th>
+                                <th>Retiradas Dra. Leila (R$)</th>
+                                <th>Com Parceiro</th>
+                                <th>50% Valor (R$)</th>
+                                <th>Saldo (R$)</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fluxoTable">
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="adicionarLinhaFluxo()">➕ Adicionar Linha</button>
+                    </div>
+                    <div style="margin-top: 20px; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+                        <h3>Resumo do Mês</h3>
+                        <p><strong>Total Receitas (Clientes):</strong> <span id="totalReceitas">R$ 0,00</span></p>
+                        <p><strong>Total Receita Escritório:</strong> <span id="totalReceitaEscritorio">R$ 0,00</span></p>
+                        <p><strong>Total Débito:</strong> <span id="totalDebito">R$ 0,00</span></p>
+                        <p><strong>Total Despesas Escritório:</strong> <span id="totalDespesasEscritorio">R$ 0,00</span></p>
+                        <p><strong>Total Retiradas Dra. Leila:</strong> <span id="totalRetiradasLeila">R$ 0,00</span></p>
+                        <p><strong>Total Despesas:</strong> <span id="totalDespesas">R$ 0,00</span></p>
+                        <p><strong>Saldo Final:</strong> <span id="saldoFinal">R$ 0,00</span></p>
+                    </div>
+                    <div style="margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 5px;">
+                        <h3>Rateio de Despesas do Escritório</h3>
+                        <p><strong>Fórmula:</strong> (Total Despesas - Receita de Aluguel) ÷ Número de Parceiros</p>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Receita de Aluguel (R$):</label>
+                                <input type="number" id="alugueis" placeholder="0,00" step="0.01" onchange="calcularRateio()">
+                            </div>
+                            <div class="form-group">
+                                <label>Número de Parceiros Ativos:</label>
+                                <input type="number" id="numParceiros" value="1" min="1" onchange="calcularRateio()">
+                            </div>
+                        </div>
+                        <p><strong>Total de Despesas:</strong> <span id="totalDespesasRateio">R$ 0,00</span></p>
+                        <p><strong>Total a Ratear:</strong> <span id="totalRatear">R$ 0,00</span></p>
+                        <p><strong>Valor por Parceiro:</strong> <span id="valorPorParceiro">R$ 0,00</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Planilha de Parceiros -->
+            <div id="planilha" class="tab-content">
+                <div class="card">
+                    <h2>📋 Planilha de Parceiros</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Selecione um Parceiro</label>
+                            <select id="selectParceiroPlanilha" onchange="carregarPlanilhaParceiro()">
+                                <option value="">Selecione um parceiro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Mês de Referência</label>
+                            <input type="month" id="mesPlanilhaParceiro" onchange="carregarPlanilhaParceiro()">
+                        </div>
+                    </div>
+                    <div id="planilhaParceiroCont"></div>
+                </div>
+            </div>
+
+            <!-- Previsões Fixas Leila -->
+            <div id="previsao" class="tab-content">
+                <div class="card">
+                    <h2>📅 PREVISÃO DE DESPESAS DRA LEILA</h2>
+                    
+                    <div class="form-group">
+                        <label>Mês de Referência</label>
+                        <input type="month" id="mesPrevisaoDespesas" value="">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Data *</label>
+                            <input type="date" id="previsaoDespesasData">
+                        </div>
+                        <div class="form-group">
+                            <label>Descrição *</label>
+                            <input type="text" id="previsaoDespesasDesc" placeholder="Descrição da despesa">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Valor (R$) *</label>
+                            <input type="number" id="previsaoDespesasValor" placeholder="Valor" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Data de Vencimento</label>
+                            <input type="date" id="previsaoDespesasVencimento">
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="adicionarLinhaPrevisaoDespesas()">➕ Adicionar Linha</button>
+                    
+                    <table class="table" style="margin-top: 20px;">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Valor (R$)</th>
+                                <th>Vencimento</th>
+                                <th>Data do Pagamento</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previsaoDespesasTable">
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 15px; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                        <strong>Total de Despesas Previstas:</strong> <span id="totalPrevisaoDespesas">R$ 0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contas Pendentes Leila -->
+            <div id="contas-leila" class="tab-content">
+                <div class="card">
+                    <h2>💳 Contas Pendentes - Dra. Leila</h2>
+                    <p style="margin-bottom: 20px; color: #666;">Lista de contas com pagamentos pendentes. A conta será removida automaticamente após o pagamento ser registrado no fluxo de caixa.</p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Valor Pendente (R$)</th>
+                                <th>Data Vencimento</th>
+                                <th>Dias em Atraso</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contasLeilaTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Previsão de Pagamentos -->
+            <div id="previsao-pagamentos" class="tab-content">
+                <div class="card">
+                    <h2>📋 Previsão de Pagamentos</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome do Pagamento *</label>
+                            <input type="text" id="nomePagamento" placeholder="Ex: Fornecedor X, Aluguel, etc">
+                        </div>
+                        <div class="form-group">
+                            <label>Valor (R$) *</label>
+                            <input type="number" id="valorPagamento" placeholder="Valor" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Data de Vencimento *</label>
+                            <input type="date" id="vencimentoPagamento">
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="adicionarPagamentoPrevisao()">➕ Adicionar Pagamento</button>
+                    
+                    <p style="margin-top: 20px; margin-bottom: 20px; color: #666;">Pagamentos pendentes. Os pagamentos em atraso aparecem automaticamente na aba "Contas Pendentes Leila".</p>
+                    
+                    <table class="table" style="margin-top: 20px;">
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Valor Pendente (R$)</th>
+                                <th>Data Vencimento</th>
+                                <th>Dias em Atraso</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previsaoPagamentosTable">
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 15px; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                        <strong>Total de Pagamentos Previstos:</strong> <span id="totalPrevisaoPagamentos">R$ 0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Previsão de Recebimentos -->
+            <div id="previsao-recebimentos" class="tab-content">
+                <div class="card">
+                    <h2>📊 Previsão de Recebimentos - Clientes</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mês de Referência *</label>
+                            <input type="month" id="mesPrevisaoRecebimentos" onchange="atualizarTabelaPrevisaoRecebimentos()">
+                        </div>
+                    </div>
+                    
+                    <table class="table" style="margin-top: 20px;">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Valor (R$)</th>
+                                <th>Vencimento</th>
+                                <th>Dias em Atraso</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previsaoRecebimentosTable">
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 15px; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                        <strong>Total de Recebimentos Previstos:</strong> <span id="totalPrevisaoRecebimentos">R$ 0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Relatório de Recebimentos por Data -->
+            <div id="relatorio-recebimentos" class="tab-content">
+                <div class="card">
+                    <h2>📅 Relatório de Recebimentos por Data</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mês de Referência *</label>
+                            <input type="month" id="mesRelatorioRecebimentos" onchange="atualizarRelatorioRecebimentos()">
+                        </div>
+                        <div class="form-group">
+                            <label>Parceiro *</label>
+                            <select id="parceiroRelatorioRecebimentos" onchange="atualizarRelatorioRecebimentos()">
+                                <option value="">-- Selecione um Parceiro --</option>
+                                <option value="TODOS">TODOS</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <table class="excel-table" style="margin-top: 20px;">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Parceiro</th>
+                                <th>Valor (R$)</th>
+                                <th>Data de Recebimento</th>
+                                <th>Data Fechamento Contrato</th>
+                                <th>Décimo Terceiro Total (R$)</th>
+                                <th>1ª Parcela 13º (R$)</th>
+                                <th>2ª Parcela 13º (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="relatorioRecebimentosTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Importação de Extratos -->
+            <div id="extratos" class="tab-content">
+                <div class="card">
+                    <h2>📥 Importação de Extratos Bancários</h2>
+                    
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="margin-bottom: 15px; color: #333;">Importar CSV</h3>
+                        <div class="form-group">
+                            <label>Selecione um arquivo CSV</label>
+                            <input type="file" id="arquivoCSV" accept=".csv">
+                        </div>
+                        <button class="btn btn-primary" onclick="importarExtratoCSV()">📤 Importar CSV</button>
+                        <p style="margin-top: 15px; color: #666;">
+                            <strong>Formato esperado do CSV:</strong><br>
+                            Data,Descrição,Tipo,Valor<br>
+                            24/11/2025,Recebimento Cliente X,credito,1000.00<br>
+                            24/11/2025,Pagamento Fornecedor,debito,500.00
+                        </p>
+                    </div>
+                    
+                    <hr style="margin: 30px 0; border: none; border-top: 1px solid #e0e0e0;">
+                    
+                    <div>
+                        <h3 style="margin-bottom: 15px; color: #333;">Importar PDF</h3>
+                        <div class="form-group">
+                            <label>Selecione um arquivo PDF</label>
+                            <input type="file" id="arquivoPDF" accept=".pdf">
+                        </div>
+                        <button class="btn btn-primary" onclick="importarExtratoPDF()">📤 Importar PDF</button>
+                        <p style="margin-top: 15px; color: #666;">
+                            <strong>Nota:</strong> O sistema irá extrair dados do PDF e importar automaticamente para o Fluxo de Caixa.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reclamatórias Trabalhistas -->
+            <div id="reclamatorias" class="tab-content">
+                <div class="card">
+                    <h2>⚖️ Reclamatórias Trabalhistas</h2>
+                    <div class="form-group">
+                        <label>Mês de Referência:</label>
+                        <input type="month" id="mesReclamatorias" onchange="atualizarRelatorioReclamatorias()">
+                    </div>
+                    <div style="margin-top: 20px; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+                        <h3>Resumo do Mês</h3>
+                        <p><strong>Total Recebido em Reclamatórias:</strong> <span id="totalReclamatorias">R$ 0,00</span></p>
+                        <p><strong>Quantidade de Recebimentos:</strong> <span id="qtdReclamatorias">0</span></p>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Valor (R$)</th>
+                                <th>Parceiro</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reclamatoriastTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Despesas Dra. Leila -->
+            <div id="despesas-leila" class="tab-content">
+                <div class="card">
+                    <h2>💸 Relatório de Despesas - Dra. Leila</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mês de Referência</label>
+                            <input type="month" id="mesDespesasLeila" onchange="atualizarTabelaDespesasLeila()">
+                        </div>
+                        <div class="form-group">
+                            <label>Categoria *</label>
+                            <select id="categoriaDespesa">
+                                <option value="">Selecione uma categoria</option>
+                                <option value="Gasolina">Gasolina</option>
+                                <option value="Roupas e Calçados">Roupas e Calçados</option>
+                                <option value="Uber">Uber</option>
+                                <option value="Supermercado">Supermercado</option>
+                                <option value="Restaurante">Restaurante</option>
+                                <option value="Limpeza">Limpeza</option>
+                                <option value="Plano de Saúde">Plano de Saúde</option>
+                                <option value="Farmácia">Farmácia</option>
+                                <option value="Despesas Juju">Despesas Juju</option>
+                                <option value="Consertos Carro">Consertos Carro</option>
+                                <option value="Seguro Carro">Seguro Carro</option>
+                                <option value="Panificadora">Panificadora</option>
+                                <option value="Funcionários">Funcionários</option>
+                                <option value="Academia">Academia</option>
+                                <option value="Educação">Educação</option>
+                                <option value="Médico Particular">Médico Particular</option>
+                                <option value="Pet">Pet</option>
+                                <option value="Despesas Diversas">Despesas Diversas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Descrição</label>
+                            <input type="text" id="descricaoDespesaLeila" placeholder="Descrição da despesa">
+                        </div>
+                        <div class="form-group">
+                            <label>Valor (R$) *</label>
+                            <input type="number" id="valorDespesaLeila" placeholder="0,00" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="dataDespesaLeila">
+                    </div>
+                    <button class="btn btn-primary" onclick="adicionarDespesaLeila()">➕ Adicionar Despesa</button>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Categoria</th>
+                                <th>Descrição</th>
+                                <th>Valor (R$)</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="despesasLeilaTable">
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 30px; padding: 20px; background-color: #f0f0f0; border-radius: 5px;">
+                        <h3>Resumo de Despesas por Categoria</h3>
+                        <table class="table" style="margin-top: 15px;">
+                            <thead>
+                                <tr>
+                                    <th>Categoria</th>
+                                    <th>Total (R$)</th>
+                                    <th>% do Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resumoDespesasTable">
+                            </tbody>
+                        </table>
+                        <div style="margin-top: 20px; padding: 15px; background-color: white; border-radius: 5px;">
+                            <p><strong>Total de Despesas do Mês:</strong> <span id="totalDespesasLeila">R$ 0,00</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Despesas do Escritório -->
+            <div id="despesas-escritorio" class="tab-content">
+                <div class="card">
+                    <h2>🏢 Despesas do Escritório</h2>
+                    <p style="color: #666; margin-bottom: 15px;">Despesas do escritório puxadas automaticamente do Fluxo de Caixa.</p>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Mês de Referência</label>
+                            <input type="month" id="mesDespesasEscritorio" onchange="atualizarTabelaDespesasEscritorio()">
+                        </div>
+                    </div>
+                    
+                    <table class="excel-table" style="margin-top: 20px;">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Valor (R$)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="despesasEscritorioTable">
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 15px; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                        <strong>Total de Despesas do Escritório:</strong> <span id="totalDespesasEscritorioMes">R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Funcionários Parceiros -->
+            <div id="funcionarios" class="tab-content">
+                <div class="card">
+                    <h2>👨‍💼 Funcionários por Parceiro</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Selecione o Parceiro *</label>
+                            <select id="selectParceiroFuncionario" onchange="atualizarTabelaFuncionarios()">
+                                <option value="">Selecione um parceiro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Mês de Referência</label>
+                            <input type="month" id="mesFuncionarios" onchange="atualizarTabelaFuncionarios()">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Descrição *</label>
+                            <input type="text" id="descricaoFuncionario" placeholder="Nome do funcionário ou descrição">
+                        </div>
+                        <div class="form-group">
+                            <label>Valor (R$) *</label>
+                            <input type="number" id="valorFuncionario" placeholder="0,00" step="0.01">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="dataFuncionario">
+                    </div>
+                    <button class="btn btn-primary" onclick="adicionarFuncionario()">➕ Adicionar Despesa</button>
+                    <table class="excel-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Débito (R$)</th>
+                                <th>Crédito (R$)</th>
+                                <th>Saldo (R$)</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="funcionariosTable">
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="adicionarLinhaFuncionario()">➕ Adicionar Linha</button>
+                    </div>
+                    <div style="margin-top: 20px; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+                        <h3>Resumo do Mês</h3>
+                        <p><strong>Total Despesas:</strong> <span id="totalFuncionarios">R$ 0,00</span></p>
+                        <p><strong>Rateio 50% para Planilha do Parceiro:</strong> <span id="rateioFuncionarios">R$ 0,00</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clientes Inadimplentes -->
+            <div id="inadimplentes" class="tab-content">
+                <div class="card">
+                    <h2>⚠️ Clientes Inadimplentes</h2>
+                    <p style="margin-bottom: 20px; color: #666;">Lista de clientes com pagamentos pendentes. O cliente é removido automaticamente após o pagamento ser registrado no fluxo de caixa.</p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Valor Pendente (R$)</th>
+                                <th>Data Vencimento</th>
+                                <th>Dias em Atraso</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inadimplentesTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- IA "A Poderosa" -->
+            <div id="ia" class="tab-content">
+                <div class="card">
+                    <h2>🤖 IA "A Poderosa" - Análise Financeira</h2>
+                    <p style="margin-bottom: 20px; color: #666;">Faça perguntas sobre seus dados financeiros. A IA analisará seus dados e fornecerá insights.</p>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="chat-message bot">Olá! Sou a IA "A Poderosa". Como posso ajudá-lo com seus dados financeiros?</div>
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="chatInput" placeholder="Digite sua pergunta..." onkeypress="if(event.key==='Enter') enviarMensagem()">
+                            <button onclick="enviarMensagem()">Enviar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <div class="navigation-buttons">
+            <button class="nav-button" id="btnVoltar" onclick="voltarAba()">⬅️ VOLTAR</button>
+            <div class="page-indicator" id="pageIndicator">Página 1 de 10</div>
+            <button class="nav-button" id="btnAvancar" onclick="avancarAba()">AVANÇAR ➡️</button>
+        </div>
+    </div>
+
+    <script>
+        // Dados em memória
+        let clientes = [];
+        let parceiros = [];
+        let fluxoCaixa = [];
+        let planilhaParceiros = [];
+        let previsoes = [];
+        let previsaoPagamentos = {};
+        let previsaoRecebimentos = {};
+        let previsoesDespesas = {};
+        let contasLeila = [];
+        let despesasLeila = [];
+        let funcionariosParceiros = [];
+        let chatMessages = [];
+
+        const tabs = ['dashboard', 'clientes', 'parceiros', 'fluxo', 'planilha', 'contas-leila', 'previsao-pagamentos', 'extratos', 'reclamatorias', 'despesas-leila', 'funcionarios', 'inadimplentes', 'contas-pendentes', 'ia'];
+        let currentTabIndex = 0;
+
+        // Função para formatar datas em DD/MM/AAAA
+        function formatarData(data) {
+            if (!data) return '-';
+            if (typeof data === 'string') {
+                if (data.match(/^\d{2}\/\d{2}\/\d{4}$/)) return data;
+                if (data.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                    const [ano, mes, dia] = data.split('-');
+                    return `${dia}/${mes}/${ano}`;
+                }
+            }
+            if (data instanceof Date) {
+                const dia = String(data.getDate()).padStart(2, '0');
+                const mes = String(data.getMonth() + 1).padStart(2, '0');
+                const ano = data.getFullYear();
+                return `${dia}/${mes}/${ano}`;
+            }
+            return '-';
+        }
+
+        // Carregar dados do localStorage
+        function carregarDados() {
+            const dados = localStorage.getItem('grupoExitoDados');
+            if (dados) {
+                const parsed = JSON.parse(dados);
+                clientes = parsed.clientes || [];
+                parceiros = parsed.parceiros || [];
+                fluxoCaixa = parsed.fluxoCaixa || [];
+                planilhaParceiros = parsed.planilhaParceiros || [];
+                previsoes = parsed.previsoes || [];
+                previsaoPagamentos = parsed.previsaoPagamentos || {};
+                contasLeila = parsed.contasLeila || [];
+                despesasLeila = parsed.despesasLeila || [];
+                funcionariosParceiros = parsed.funcionariosParceiros || [];
+            }
+            atualizarSelects();
+            atualizarDashboard();
+        }
+
+        // Salvar dados no localStorage
+        function salvarDados() {
+            localStorage.setItem('grupoExitoDados', JSON.stringify({
+                clientes, parceiros, fluxoCaixa, planilhaParceiros, previsoes, previsaoPagamentos, contasLeila, despesasLeila, funcionariosParceiros
+            }));
+        }
+
+        // Trocar abas
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons[tabs.indexOf(tabName)].classList.add('active');
+            
+            currentTabIndex = tabs.indexOf(tabName);
+            
+            // Atualizar tabelas quando abrir abas específicas
+            if (tabName === 'previsao-pagamentos') {
+                sincronizarPagamentoPrevisao();
+                atualizarTabelaPrevisaoPagamentos();
+            }
+            
+            if (tabName === 'inadimplentes') {
+                carregarDados();
+                atualizarTabelaPrevisaoRecebimentos();
+                atualizarTabelaClientesInadimplentes();
+            }
+            
+            if (tabName === 'contas-leila') {
+                carregarDados();
+                atualizarTabelaContasPendentes();
+            }
+            
+            atualizarBotoes();
+        }
+
+        // Navegar entre abas com botões
+        function avancarAba() {
+            if (currentTabIndex < tabs.length - 1) {
+                currentTabIndex++;
+                switchTabByIndex(currentTabIndex);
+            }
+        }
+
+        function voltarAba() {
+            if (currentTabIndex > 0) {
+                currentTabIndex--;
+                switchTabByIndex(currentTabIndex);
+            }
+        }
+
+        function switchTabByIndex(index) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabs[index]).classList.add('active');
+            document.querySelectorAll('.tab-button')[index].classList.add('active');
+            atualizarBotoes();
+        }
+
+        function atualizarBotoes() {
+            document.getElementById('btnVoltar').disabled = currentTabIndex === 0;
+            document.getElementById('btnAvancar').disabled = currentTabIndex === tabs.length - 1;
+            document.getElementById('pageIndicator').textContent = `Página ${currentTabIndex + 1} de ${tabs.length}`;
+        }
+
+        // Adicionar Cliente
+        function adicionarCliente() {
+            const razaoSocial = document.getElementById('razaoSocial').value;
+            const nomeFantasia = document.getElementById('nomeFantasia').value;
+            const cnpj = document.getElementById('cnpj').value;
+            const email = document.getElementById('emailCliente').value;
+            const valorContrato = parseFloat(document.getElementById('valorContrato').value.replace(',', '.'));
+            const parceiro = document.getElementById('parceiroPrincipal').value;
+            const dataFechamento = document.getElementById('dataFechamentoContrato').value;
+            const diaVencimento = parseInt(document.getElementById('diaVencimentoHonorarios').value);
+            const retiradadaParceiros = document.getElementById('retiradadaParceiros').value;
+
+            if (!razaoSocial || !valorContrato) {
+                alert('Preencha os campos obrigatórios!');
+                return;
+            }
+
+            const novoCliente = {
+                id: Date.now(),
+                razaoSocial,
+                nomeFantasia,
+                cnpj,
+                email,
+                valorContrato,
+                parceiro,
+                dataFechamento,
+                diaVencimento,
+                retiradadaParceiros,
+                lancamento_100_feito: 'NAO',
+                lancamento_50_feito: 'NAO',                dataCadastro: formatarData(new Date()),
+            };
+            
+            adicionarLog('Cliente criado: ID=' + novoCliente.id + ', Nome=' + razaoSocial + ', Retirada100%=' + retiradadaParceiros);
+            
+            clientes.push(novoCliente);
+            
+            // REGRA 1: Gatilho pos-criacao - Executar apos cliente ser salvo
+            executarRegra1(novoCliente);
+
+            salvarDados();
+            limparFormularioClientes();
+            atualizarTabelaClientes();
+            atualizarDashboard();
+            atualizarSelects();
+        }
+
+        function atualizarTabelaClientes() {
+            const tbody = document.getElementById('clientesTable');
+            tbody.innerHTML = '';
+            clientes.forEach(cliente => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${cliente.razaoSocial}</td>
+                        <td>${cliente.nomeFantasia || '-'}</td>
+                        <td>${cliente.cnpj || '-'}</td>
+                        <td>${cliente.email || '-'}</td>
+                        <td>R$ ${cliente.valorContrato.toFixed(2).replace('.', ',')}</td>
+                        <td>${cliente.parceiro ? parceiros.find(p => p.id == cliente.parceiro)?.nome || '-' : '-'}</td>
+                        <td>${cliente.dataVencimento || '-'}</td>
+                        <td><button class="btn btn-danger btn-small" onclick="deletarCliente(${cliente.id})">Deletar</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function deletarCliente(id) {
+            clientes = clientes.filter(c => c.id !== id);
+            salvarDados();
+            atualizarTabelaClientes();
+            atualizarDashboard();
+        }
+        
+
+        // LOG DE DEPURACAO
+        const logAutomacao = [];
+        function adicionarLog(mensagem) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = '[' + timestamp + '] ' + mensagem;
+            logAutomacao.push(logEntry);
+            console.log(logEntry);
+        }
+        
+        // REGRA 1: Debito 100% quando cliente criado com Retirada 100% = SIM
+        function executarRegra1(cliente) {
+            adicionarLog('Verificando REGRA 1 para cliente: ' + cliente.razaoSocial);
+            
+            const condicao1 = cliente.retiradadaParceiros === 'sim';
+            const condicao2 = cliente.parceiro && cliente.parceiro !== '';
+            const condicao3 = cliente.valorContrato > 0;
+            const condicao4 = cliente.lancamento_100_feito !== 'SIM';
+            
+            adicionarLog('REGRA 1 - Condicoes: Retirada100%=SIM(' + condicao1 + '), Parceiro(' + condicao2 + '), Valor>0(' + condicao3 + '), Nao lancado(' + condicao4 + ')');
+            
+            if (condicao1 && condicao2 && condicao3 && condicao4) {
+                const lancamento = {
+                    id: Date.now(),
+                    parceiroId: cliente.parceiro,
+                    clienteId: cliente.id,
+                    descricao: 'Cliente ' + cliente.razaoSocial + ' - 100% parceiro',
+                    debito: cliente.valorContrato,
+                    credito: 0,
+                    data: formatarData(new Date()),
+                    tipo: '100%'
+                };
+                
+                planilhaParceiros.push(lancamento);
+                adicionarLog('REGRA 1 EXECUTOU: Lancamento criado na Planilha - Debito=R$' + lancamento.debito.toFixed(2).replace('.', ','));
+                
+                cliente.lancamento_100_feito = 'SIM';
+                adicionarLog('REGRA 1: Cliente marcado como lancamento_100_feito=SIM');
+            } else {
+                adicionarLog('REGRA 1 PULOU: Condicoes nao atendidas');
+            }
+        }
+
+        function limparFormularioClientes() {
+            document.getElementById('razaoSocial').value = '';
+            document.getElementById('nomeFantasia').value = '';
+            document.getElementById('cnpj').value = '';
+            document.getElementById('emailCliente').value = '';
+            document.getElementById('valorContrato').value = '';
+            document.getElementById('parceiroPrincipal').value = '';
+            document.getElementById('dataFechamentoContrato').value = '';
+            document.getElementById('diaVencimentoHonorarios').value = '';
+            document.getElementById('retiradadaParceiros').value = '';
+        }
+
+        // Adicionar Parceiro
+        function adicionarParceiro() {
+            const nome = document.getElementById('nomeParceiro').value;
+            const email = document.getElementById('emailParceiro').value;
+
+            if (!nome) {
+                alert('Preencha o nome do parceiro!');
+                return;
+            }
+
+            parceiros.push({
+                id: Date.now(),
+                nome,
+                email,
+                dataCadastro: formatarData(new Date())
+            });
+
+            salvarDados();
+            document.getElementById('nomeParceiro').value = '';
+            document.getElementById('emailParceiro').value = '';
+            atualizarTabelaParceiros();
+            atualizarSelects();
+            atualizarDashboard();
+        }
+
+        function atualizarTabelaParceiros() {
+            const tbody = document.getElementById('parceirosTable');
+            tbody.innerHTML = '';
+            parceiros.forEach(parceiro => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${parceiro.nome}</td>
+                        <td>${parceiro.email || '-'}</td>
+                        <td>${parceiro.dataCadastro}</td>
+                        <td><button class="btn btn-danger btn-small" onclick="deletarParceiro(${parceiro.id})">Deletar</button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function deletarParceiro(id) {
+            parceiros = parceiros.filter(p => p.id !== id);
+            salvarDados();
+            atualizarTabelaParceiros();
+            atualizarSelects();
+            atualizarDashboard();
+        }
+
+        // Atualizar Selects
+        function atualizarSelects() {
+            const selectsParceiros = ['parceiroPrincipal', 'selectParceiroPlanilha', 'selectParceiroFuncionario'];
+            selectsParceiros.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                if (select) {
+                    const value = select.value;
+                    select.innerHTML = '<option value="">Selecione...</option>';
+                    parceiros.forEach(p => {
+                        select.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
+                    });
+                    select.value = value;
+                }
+            });
+
+            const selectClientes = document.getElementById('clientePrevisao');
+            if (selectClientes) {
+                const value = selectClientes.value;
+                selectClientes.innerHTML = '<option value="">Selecione...</option>';
+                clientes.forEach(c => {
+                    selectClientes.innerHTML += `<option value="${c.id}">${c.razaoSocial}</option>`;
+                });
+                selectClientes.value = value;
+            }
+        }
+
+        // Fluxo de Caixa
+        function adicionarLinhaFluxo() {
+            const mes = document.getElementById('mesReferencia').value || new Date().toISOString().slice(0, 7);
+            fluxoCaixa.push({
+                id: Date.now(),
+                mes,
+                saldoAnterior: 0,
+                descricao: '',
+                debito: 0,
+                credito: 0,
+                despesasEscritorio: 0,
+                retiradasLeila: 0
+            });
+            salvarDados();
+            atualizarFluxo();
+        }
+
+        function atualizarFluxo() {
+            const mes = document.getElementById('mesReferencia').value || new Date().toISOString().slice(0, 7);
+            document.getElementById('mesCompetenciaFluxo').textContent = new Date(mes + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+            
+            const fluxoMes = fluxoCaixa.filter(f => f.mes === mes).sort((a, b) => new Date(a.data || 0) - new Date(b.data || 0));
+            
+            const tbody = document.getElementById('fluxoTable');
+            tbody.innerHTML = '';
+            
+            // Buscar saldo anterior do mês anterior
+            let saldoAnterior = 0;
+            const mesAnterior = new Date(mes + '-01');
+            mesAnterior.setMonth(mesAnterior.getMonth() - 1);
+            const mesAnteriorStr = mesAnterior.toISOString().slice(0, 7);
+            const fluxoMesAnterior = fluxoCaixa.filter(f => f.mes === mesAnteriorStr);
+            if (fluxoMesAnterior.length > 0) {
+                let saldoFinalAnterior = 0;
+                fluxoMesAnterior.forEach(f => {
+                    saldoFinalAnterior += f.credito - f.debito - f.despesasEscritorio - f.retiradasLeila;
+                });
+                saldoAnterior = saldoFinalAnterior;
+            }
+            
+            // Adicionar linha de saldo anterior
+            tbody.innerHTML += `
+                <tr style="background-color: #f0f0f0; font-weight: bold;">
+                    <td colspan="8"><strong>SALDO ANTERIOR:</strong></td>
+                    <td>R$ ${saldoAnterior.toFixed(2).replace('.', ',')}</td>
+                    <td></td>
+                </tr>
+            `;
+            
+            let totalReceitas = 0;
+            let totalReceitaEscritorio = 0;
+            let totalDebito = 0;
+            let totalDespesasEscritorio = 0;
+            let totalRetiradasLeila = 0;
+            let totalDespesas = 0;
+
+            fluxoMes.forEach((movimento, index) => {
+                const saldo = saldoAnterior + movimento.credito - movimento.debito - movimento.despesasEscritorio - movimento.retiradasLeila;
+                totalReceitas += movimento.credito;
+                totalReceitaEscritorio += movimento.receitaEscritorio || 0;
+                totalDebito += movimento.debito;
+                totalDespesasEscritorio += movimento.despesasEscritorio;
+                totalRetiradasLeila += movimento.retiradasLeila;
+                totalDespesas += movimento.debito + movimento.despesasEscritorio + movimento.retiradasLeila;
+
+                const valor50 = movimento.credito * 0.5;
+                tbody.innerHTML += `
+                    <tr>
+                        <td>R$ ${saldoAnterior.toFixed(2).replace('.', ',')}</td>
+                        <td><input type="text" value="${movimento.descricao}" onchange="atualizarMovimento(${movimento.id}, 'descricao', this.value)"></td>
+                        <td><input type="number" value="${movimento.debito.toFixed(2)}" step="0.01" onchange="atualizarMovimento(${movimento.id}, 'debito', this.value)"></td>
+                        <td><input type="number" value="${movimento.credito.toFixed(2)}" step="0.01" onchange="atualizarMovimento(${movimento.id}, 'credito', this.value)"></td>
+                        <td><input type="number" value="${(movimento.receitaEscritorio || 0).toFixed(2)}" step="0.01" onchange="atualizarMovimento(${movimento.id}, 'receitaEscritorio', this.value)"></td>
+                        <td><input type="number" value="${movimento.despesasEscritorio.toFixed(2)}" step="0.01" onchange="atualizarMovimento(${movimento.id}, 'despesasEscritorio', this.value)"></td>
+                        <td><input type="number" value="${movimento.retiradasLeila.toFixed(2)}" step="0.01" onchange="atualizarMovimento(${movimento.id}, 'retiradasLeila', this.value)"></td>
+                        <td><select onchange="atualizarMovimento(${movimento.id}, 'parceiroId', this.value)" style="width: 100%;"><option value="">-- Selecione --</option>${parceiros.map(p => `<option value="${p.id}" ${movimento.parceiroId == p.id ? 'selected' : ''}>${p.nome}</option>`).join('')}</select></td>
+                        <td><strong>R$ ${valor50.toFixed(2).replace('.', ',')}</strong></td>
+                        <td>R$ ${saldo.toFixed(2).replace('.', ',')}</td>
+                        <td><button class="btn btn-danger btn-small" onclick="deletarFluxo(${movimento.id})">Deletar</button></td>
+                    </tr>
+                `;
+                saldoAnterior = saldo;
+            });
+
+            document.getElementById('totalReceitas').textContent = `R$ ${totalReceitas.toFixed(2).replace('.', ',')}`;
+            document.getElementById('totalReceitaEscritorio').textContent = `R$ ${totalReceitaEscritorio.toFixed(2).replace('.', ',')}`;
+            document.getElementById('totalDebito').textContent = `R$ ${totalDebito.toFixed(2).replace('.', ',')}`;
+            document.getElementById('totalDespesasEscritorio').textContent = `R$ ${totalDespesasEscritorio.toFixed(2).replace('.', ',')}`;
+            document.getElementById('totalRetiradasLeila').textContent = `R$ ${totalRetiradasLeila.toFixed(2).replace('.', ',')}`;
+            document.getElementById('totalDespesas').textContent = `R$ ${totalDespesas.toFixed(2).replace('.', ',')}`;
+            document.getElementById('saldoFinal').textContent = `R$ ${(totalReceitas - totalDespesas).toFixed(2).replace('.', ',')}`;
+            
+            calcularRateio();
+            atualizarRelatorioReclamatorias();
+            atualizarTabelaDespesasEscritorio();
+            sincronizarContasPendentes();
+            sincronizarClientesInadimplentes();
+            atualizarTabelaPrevisaoRecebimentos();
+        }
+
+        function atualizarMovimento(id, campo, valor) {
+            const movimento = fluxoCaixa.find(f => f.id === id);
+            if (movimento) {
+                if (campo === 'descricao') {
+                    movimento.descricao = valor;
+                } else if (campo === 'parceiroId') {
+                    movimento.parceiroId = valor;
+                    // REGRA 1: Quando seleciona parceiro, puxa 50% para Planilha do Parceiro
+                    const creditoNumerico = parseFloat(movimento.credito) || 0;
+                    if (valor && creditoNumerico > 0) {
+                        puxar50ParaPlanilhaParceiro(movimento);
+                    }
+                
+                } else {
+                    // Converter vírgula para ponto para aceitar formato brasileiro
+                    const valorFormatado = String(valor).replace(',', '.');
+                    movimento[campo] = parseFloat(valorFormatado) || 0;
+                }
+                
+                // Se foi alterado Despesas Dra. Leila (pagamento), sincronizar com previsão de pagamentos
+                if ((campo === 'retiradasLeila' || campo === 'despesasEscritorio') && movimento.descricao && movimento[campo] > 0) {
+                    sincronizarComPrevisaoPagamentos(movimento);
+                }
+                
+                // Se foi alterado Crédito (recebimento), sincronizar com previsão de recebimentos
+                if (campo === 'credito' && movimento.descricao && movimento.credito > 0) {
+                    sincronizarComPrevisaoRecebimentos(movimento);
+                }
+                
+                salvarDados();
+                atualizarFluxo();
+                atualizarDashboard();
+            }
+        }
+        
+        // REGRA 2: Lancamento automatico para Recebimento 100% = NAO (50% do fluxo de caixa)
+        // REGRA 2 REMOVIDA: Você digita manualmente os 50% na Planilha do Parceiro
+        
+        function sincronizarComPrevisaoPagamentos(movimento) {
+            // Procurar por um pagamento na previsão que corresponda à descrição
+            const mes = movimento.mes || new Date().toISOString().slice(0, 7);
+            const pagamentos = previsaoPagamentos[mes] || [];
+            
+            // Determinar o valor do movimento (pode ser retiradasLeila ou despesasEscritorio)
+            const valorMovimento = movimento.retiradasLeila > 0 ? movimento.retiradasLeila : movimento.despesasEscritorio;
+            
+            // Procurar por um pagamento que corresponda à descrição
+            for (let i = pagamentos.length - 1; i >= 0; i--) {
+                const pag = pagamentos[i];
+                // Verificar se a descrição do movimento contém o nome do pagamento
+                if (movimento.descricao.toLowerCase().includes(pag.nome.toLowerCase())) {
+                    // Verificar se o valor é aproximadamente igual (com margem de 0.01)
+                    if (Math.abs(valorMovimento - pag.valor) < 0.01) {
+                        // Remover da previsão
+                        pagamentos.splice(i, 1);
+                        salvarDados();
+                        atualizarTabelaPrevisaoPagamentos();
+                        break; // Sair após encontrar e remover
+                    }
+                }
+            }
+        }
+
+        function sincronizarComPrevisaoRecebimentos(movimento) {
+            // Procurar por um recebimento na previsao que corresponda ao cliente
+            const mes = movimento.mes || new Date().toISOString().slice(0, 7);
+            const [anoSelecionado, mesSelecionado] = mes.split('-').map(Number);
+            
+            // Procurar por um cliente que corresponda a descricao do movimento
+            clientes.forEach(cliente => {
+                if (cliente.diaVencimento && movimento.descricao.toLowerCase().includes(cliente.razaoSocial.toLowerCase())) {
+                    // Verificar se o valor eh aproximadamente igual ao valor do contrato
+                    if (Math.abs(movimento.credito - cliente.valorContrato) < 0.01) {
+                        // Cliente foi recebido, atualizar a tabela de previsao
+                        atualizarTabelaPrevisaoRecebimentos();
+                    }
+                }
+            });
+        }
+
+        function deletarFluxo(id) {
+            fluxoCaixa = fluxoCaixa.filter(f => f.id !== id);
+            salvarDados();
+            atualizarFluxo();
+            atualizarDashboard();
+        }
+
+        function calcularRateio() {
+            const mes = document.getElementById('mesReferencia').value || new Date().toISOString().slice(0, 7);
+            const fluxoMes = fluxoCaixa.filter(f => f.mes === mes);
+            
+            let totalReceitaEscritorio = 0;
+            let totalDespesasEscritorio = 0;
+            
+            fluxoMes.forEach(f => {
+                totalReceitaEscritorio += f.receitaEscritorio || 0;
+                totalDespesasEscritorio += f.despesasEscritorio || 0;
+            });
+
+            const numParceiros = parseInt(document.getElementById('numParceiros').value) || 1;
+            const totalRatear = totalReceitaEscritorio - totalDespesasEscritorio;
+            const valorPorParceiro = totalRatear / numParceiros;
+
+            document.getElementById('totalDespesasRateio').textContent = `R$ ${totalDespesasEscritorio.toFixed(2).replace('.', ',')}`;
+            document.getElementById('totalRatear').textContent = `R$ ${totalRatear.toFixed(2).replace('.', ',')}`;
+            document.getElementById('valorPorParceiro').textContent = `R$ ${valorPorParceiro.toFixed(2).replace('.', ',')}`;
+        }
+
+        // Planilha de Parceiros
+        function carregarPlanilhaParceiro() {
+            const parceiroId = document.getElementById('selectParceiroPlanilha').value;
+            const mes = document.getElementById('mesPlanilhaParceiro').value || new Date().toISOString().slice(0, 7);
+            const container = document.getElementById('planilhaParceiroCont');
+            
+            if (!parceiroId) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const parceiro = parceiros.find(p => p.id == parceiroId);
+            const fluxoMes = fluxoCaixa.filter(f => f.mes === mes).sort((a, b) => new Date(a.data || 0) - new Date(b.data || 0));
+            
+            // Buscar saldo anterior do mês anterior
+            let saldoAnterior = 0;
+            const mesAnterior = new Date(mes + '-01');
+            mesAnterior.setMonth(mesAnterior.getMonth() - 1);
+            const mesAnteriorStr = mesAnterior.toISOString().slice(0, 7);
+            const fluxoMesAnterior = fluxoCaixa.filter(f => f.mes === mesAnteriorStr);
+            if (fluxoMesAnterior.length > 0) {
+                let saldoFinalAnterior = 0;
+                fluxoMesAnterior.forEach(f => {
+                    saldoFinalAnterior += f.credito - f.debito - f.despesasEscritorio - f.retiradasLeila;
+                });
+                saldoAnterior = saldoFinalAnterior;
+            }
+
+            let html = `
+                <div style="margin-top: 20px;">
+                    <h3>Planilha de ${parceiro.nome}</h3>
+                    <p><strong>Mês de Competência:</strong> ${new Date(mes + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</p>
+                    <table class="excel-table">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Descrição</th>
+                                <th>Débito (R$)</th>
+                                <th>Crédito (R$)</th>
+                                <th>Saldo Atual (R$)</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="planilhaParceiro_${parceiroId}">
+            `;
+
+            // Linha de saldo anterior
+            html += `
+                    <tr style="background-color: #f0f0f0; font-weight: bold;">
+                        <td>-</td>
+                        <td>SALDO ANTERIOR</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>R$ ${saldoAnterior.toFixed(2).replace('.', ',')}</td>
+                        <td>-</td>
+                    </tr>
+            `;
+
+            let saldoAtual = saldoAnterior;
+            const clientesParceiro = clientes.filter(c => c.parceiro == parceiroId);
+            const valorRateio = parseFloat(document.getElementById('valorPorParceiro').textContent.replace('R$ ', '').replace(',', '.')) || 0;
+
+            // Processar lancamentos automaticos da Planilha de Parceiros (REGRA 1 e REGRA 2)
+            const lancamentosParceiro = planilhaParceiros.filter(l => l.parceiroId == parceiroId);
+            lancamentosParceiro.forEach(lancamento => {
+                saldoAtual += lancamento.credito - lancamento.debito;
+                html += `
+                    <tr>
+                        <td>${lancamento.data || '-'}</td>
+                        <td>${lancamento.descricao}</td>
+                        <td>${lancamento.debito > 0 ? lancamento.debito.toFixed(2).replace('.', ',') : '-'}</td>
+                        <td>${lancamento.credito > 0 ? lancamento.credito.toFixed(2).replace('.', ',') : '-'}</td>
+                        <td>R$ ${saldoAtual.toFixed(2).replace('.', ',')}</td>
+                        <td><button class="btn btn-danger btn-small" onclick="deletarLancamentoParceiro(${lancamento.id})">Deletar</button></td>
+                    </tr>
+                `;
+            });
+
+            // REMOVIDO: Lógica automática de 50% - agora é acionada apenas quando você seleciona o parceiro no Fluxo de Caixa
+
+            // Adicionar despesas de funcionários do parceiro (50% rateado)
+            const funcionariosParceiro = funcionariosParceiros.filter(f => f.parceiroId == parceiroId && f.mes === mes);
+            let totalFuncionarios = 0;
+            funcionariosParceiro.forEach(func => {
+                totalFuncionarios += func.debito;
+            });
+            const rateioFuncionarios = totalFuncionarios * 0.5;
+            if (rateioFuncionarios > 0) {
+                saldoAtual -= rateioFuncionarios;
+                html += `
+                    <tr>
+                        <td>-</td>
+                        <td><input type="text" value="50% - Despesas com Funcionários" onchange="atualizarMovimentoParceiro(${parceiroId}, this, 'descricao')"></td>
+                        <td><input type="number" value="${rateioFuncionarios.toFixed(2)}" step="0.01" onchange="atualizarMovimentoParceiro(${parceiroId}, this, 'debito')"></td>
+                        <td>-</td>
+                        <td>R$ ${saldoAtual.toFixed(2).replace('.', ',')}</td>
+                        <td>-</td>
+                    </tr>
+                `;
+            }
+
+            // Adicionar rateio de despesas do escritório
+            if (valorRateio > 0) {
+                saldoAtual -= valorRateio;
+                html += `
+                    <tr>
+                        <td>-</td>
+                        <td><input type="text" value="Rateio - Despesas do Escritório" onchange="atualizarMovimentoParceiro(${parceiroId}, this, 'descricao')"></td>
+                        <td><input type="number" value="${valorRateio.toFixed(2)}" step="0.01" onchange="atualizarMovimentoParceiro(${parceiroId}, this, 'debito')"></td>
+                        <td>-</td>
+                        <td>R$ ${saldoAtual.toFixed(2).replace('.', ',')}</td>
+                        <td><button class="btn btn-danger btn-small" onclick="deletarMovimentoParceiro(${parceiroId}, this)">Deletar</button></td>
+                    </tr>
+                `;
+            }
+
+            html += `
+                        </tbody>
+                    </table>
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-primary" onclick="adicionarLinhaPlaniha(${parceiroId})">➕ Adicionar Linha</button>
+                    </div>
+                    <div style="margin-top: 20px; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+                        <p><strong>Saldo Anterior:</strong> R$ ${saldoAnterior.toFixed(2).replace('.', ',')}</p>
+                        <p><strong>Saldo Atual:</strong> R$ ${saldoAtual.toFixed(2).replace('.', ',')}</p>
+                        <p style="color: ${saldoAtual >= 0 ? 'green' : 'red'}; font-weight: bold;">
+                            ${saldoAtual >= 0 ? '✓ Parceiro tem valor a receber' : '✗ Parceiro deve acertar'}
+                        </p>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function atualizarMovimentoParceiro(parceiroId, element, campo) {
+            // Função para atualizar movimentos da planilha de parceiros
+            console.log('Movimento atualizado:', parceiroId, campo, element.value);
+            salvarDados();
+            carregarPlanilhaParceiro();
+        }
+
+        function deletarMovimentoParceiro(parceiroId, element) {
+            element.closest('tr').remove();
+            salvarDados();
+            carregarPlanilhaParceiro();
+        }
+
+        function deletarLancamentoParceiro(lancamentoId) {
+            planilhaParceiros = planilhaParceiros.filter(l => l.id !== lancamentoId);
+            salvarDados();
+            carregarPlanilhaParceiro();
+        }
+
+        function adicionarLinhaPlaniha(parceiroId) {
+            // Adicionar linha vazia para edição manual
+            const tbody = document.getElementById(`planilhaParceiro_${parceiroId}`);
+            if (tbody) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="date"></td>
+                    <td><input type="text" placeholder="Descrição"></td>
+                    <td><input type="number" placeholder="0,00" step="0.01"></td>
+                    <td><input type="number" placeholder="0,00" step="0.01"></td>
+                    <td>R$ 0,00</td>
+                    <td><button class="btn btn-danger btn-small" onclick="this.closest('tr').remove()">Deletar</button></td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        // Previsão de Recebimentos
+        function adicionarPrevisao() {
+            const clienteId = document.getElementById('clientePrevisao').value;
+            const valor = parseFloat(String(document.getElementById('valorPrevisao').value).replace(',', '.'));
+            const data = document.getElementById('dataPrevisao').value;
+
+            if (!clienteId || !valor) {
+                alert('Preencha os campos obrigatórios!');
+                return;
+            }
+
+            const cliente = clientes.find(c => c.id == clienteId);
+            previsoes.push({
+                id: Date.now(),
+                clienteId,
+                clienteNome: cliente.razaoSocial,
+                valor,
+                data,
+                pago: false,
+                dataPagamento: null
+            });
+
+            salvarDados();
+            document.getElementById('clientePrevisao').value = '';
+            document.getElementById('valorPrevisao').value = '';
+            document.getElementById('dataPrevisao').value = '';
+            atualizarTabelaPrevisao();
+            atualizarDashboard();
+        }
+
+        function atualizarTabelaPrevisao() {
+            const mes = document.getElementById('mesPrevisao').value || new Date().toISOString().slice(0, 7);
+            const tbody = document.getElementById('previsaoTable');
+            tbody.innerHTML = '';
+            
+            const previsoesMes = previsoes.filter(p => p.mes === mes).sort((a, b) => new Date(a.data || 0) - new Date(b.data || 0));
+            
+            let saldoAnterior = 0;
+            const mesAnterior = new Date(mes + '-01');
+            mesAnterior.setMonth(mesAnterior.getMonth() - 1);
+            const mesAnteriorStr = mesAnterior.toISOString().slice(0, 7);
+            const previsoesMesAnterior = previsoes.filter(p => p.mes === mesAnteriorStr);
+            if (previsoesMesAnterior.length > 0) {
+                let saldoFinal = 0;
+                previsoesMesAnterior.forEach(p => {
+                    saldoFinal += p.credito - p.debito;
+                });
+                saldoAnterior = saldoFinal;
+            }
+            
+            // Adicionar linha de saldo anterior
+            tbody.innerHTML += `
+                <tr style="background-color: #f0f0f0; font-weight: bold;">
+                    <td colspan="8"><strong>SALDO ANTERIOR:</strong></td>
+                    <td>R$ ${saldoAnterior.toFixed(2).replace('.', ',')}</td>
+                    <td></td>
+                </tr>
+            `;
+            
+            let saldoAtual = saldoAnterior;
+            
+            previsoesMes.forEach(prev => {
+                const hoje = new Date();
+                const dataVencimento = new Date(prev.data);
+                const diasAtraso = Math.floor((hoje - dataVencimento) / (1000 * 60 * 60 * 24));
+                
+                let status = 'Pendente';
+                if (prev.pago) {
+                    status = 'Pago';
+                } else if (diasAtraso > 0) {
+                    status = `Atrasado ${diasAtraso} dias`;
+                }
+                
+                saldoAtual += prev.credito - prev.debito;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${prev.data || '-'}</td>
+                        <td>${prev.clienteNome}</td>
+                        <td>${prev.descricao || 'Recebimento mensal'}</td>
+                        <td>${prev.debito ? prev.debito.toFixed(2).replace('.', ',') : '-'}</td>
+                        <td>${prev.credito ? prev.credito.toFixed(2).replace('.', ',') : '-'}</td>
+                        <td>R$ ${saldoAtual.toFixed(2).replace('.', ',')}</td>
+                        <td>${status}</td>
+                        <td>
+                            <button class="btn btn-primary btn-small" onclick="marcarPagamentoPrevisao(${prev.id})">Pago</button>
+                            <button class="btn btn-danger btn-small" onclick="deletarPrevisao(${prev.id})">Deletar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            atualizarAlertasInadimplencia();
+        }
+
+        function marcarPagamentoPrevisao(id) {
+            const previsao = previsoes.find(p => p.id === id);
+            if (previsao) {
+                previsao.pago = true;
+                previsao.dataPagamento = new Date().toISOString().split('T')[0];
+                salvarDados();
+                atualizarTabelaPrevisao();
+                atualizarDashboard();
+            }
+        }
+
+        function deletarPrevisao(id) {
+            previsoes = previsoes.filter(p => p.id !== id);
+            salvarDados();
+            atualizarTabelaPrevisao();
+            atualizarDashboard();
+        }
+
+        function atualizarAlertasInadimplencia() {
+            const alertasDiv = document.getElementById('alertasInadimplenciaDetalhado');
+            const inadimplentes = previsoes.filter(p => !p.pago);
+            
+            if (inadimplentes.length === 0) {
+                alertasDiv.innerHTML = '';
+                return;
+            }
+
+            let html = '<div class="alert-box danger"><h3>⚠️ Clientes Inadimplentes</h3>';
+            inadimplentes.forEach(p => {
+                const hoje = new Date();
+                const dataVencimento = new Date(p.data);
+                const diasAtraso = Math.floor((hoje - dataVencimento) / (1000 * 60 * 60 * 24));
+                
+                if (diasAtraso > 0) {
+                    html += `<div class="alert-item">${p.clienteNome} - Atrasado ${diasAtraso} dias - R$ ${p.valor.toFixed(2).replace('.', ',')}</div>`;
+                }
+            });
+            html += '</div>';
+            alertasDiv.innerHTML = html;
+        }
+
+        // Contas Dra. Leila
+        function adicionarContaLeila() {
+            const descricao = document.getElementById('descricaoConta').value;
+            const valor = parseFloat(String(document.getElementById('valorConta').value).replace(',', '.'));
+            const data = document.getElementById('dataConta').value;
+
+            if (!descricao || !valor) {
+                alert('Preencha os campos obrigatórios!');
+                return;
+            }
+
+            contasLeila.push({
+                id: Date.now(),
+                descricao,
+                valor,
+                data,
+                pago: false,
+                dataPagamento: null
+            });
+
+            salvarDados();
+            document.getElementById('descricaoConta').value = '';
+            document.getElementById('valorConta').value = '';
+            document.getElementById('dataConta').value = '';
+            atualizarTabelaContasLeila();
+            atualizarDashboard();
+        }
+
+        function atualizarTabelaContasLeila() {
+            const tbody = document.getElementById('contasLeilaTable');
+            tbody.innerHTML = '';
+            contasLeila.forEach(conta => {
+                const status = conta.pago ? 'Pago' : 'Pendente';
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${conta.descricao}</td>
+                        <td>R$ ${conta.valor.toFixed(2).replace('.', ',')}</td>
+                        <td>${conta.data}</td>
+                        <td>${status}</td>
+                        <td>
+                            <button class="btn btn-primary btn-small" onclick="marcarPagamentoLeila(${conta.id})">Pago</button>
+                            <button class="btn btn-danger btn-small" onclick="deletarContaLeila(${conta.id})">Deletar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            atualizarAlertasContasLeila();
+        }
+
+        function marcarPagamentoLeila(id) {
+            const conta = contasLeila.find(c => c.id === id);
+            if (conta) {
+                conta.pago = true;
+                conta.dataPagamento = new Date().toISOString().split('T')[0];
+                salvarDados();
+                atualizarTabelaContasLeila();
+                atualizarDashboard();
+            }
+        }
+
+        function deletarContaLeila(id) {
+            contasLeila = contasLeila.filter(c => c.id !== id);
+            salvarDados();
+            atualizarTabelaContasLeila();
+            atualizarDashboard();
+        }
+
+        function atualizarAlertasContasLeila() {
+            const alertasDiv = document.getElementById('alertasContasLeilaDetalhado');
+            const pendentes = contasLeila.filter(c => !c.pago);
+            
+            if (pendentes.length === 0) {
+                alertasDiv.innerHTML = '';
+                return;
+            }
+
+            let html = '<div class="alert-box danger"><h3>⚠️ Contas Pessoais Pendentes</h3>';
+            pendentes.forEach(c => {
+                html += `<div class="alert-item">${c.descricao} - R$ ${c.valor.toFixed(2).replace('.', ',')} - Vencimento: ${c.data}</div>`;
+            });
+            html += '</div>';
+            alertasDiv.innerHTML = html;
+        }
+
+        // Reclamatórias Trabalhistas
+        function atualizarRelatorioReclamatorias() {
+            const mes = document.getElementById('mesReclamatorias').value || new Date().toISOString().slice(0, 7);
+            const fluxoMes = fluxoCaixa.filter(f => f.mes === mes);
+            
+            const reclamatorias = fluxoMes.filter(f => 
+                f.descricao.toLowerCase().includes('reclamatória') || 
+                f.descricao.toLowerCase().includes('reclamação') ||
+                f.descricao.toLowerCase().includes('trabalhista')
+            );
+
+            const tbody = document.getElementById('reclamatoriastTable');
+            tbody.innerHTML = '';
+            
+            let totalReclamatorias = 0;
+            reclamatorias.forEach(rec => {
+                const valor = rec.credito > 0 ? rec.credito : rec.debito;
+                totalReclamatorias += valor;
+                
+                const cliente = clientes.find(c => rec.descricao.includes(c.razaoSocial));
+                const parceiroNome = cliente && cliente.parceiro ? 
+                    parceiros.find(p => p.id == cliente.parceiro)?.nome || '-' : '-';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${formatarData(new Date())}</td>
+                        <td>${rec.descricao}</td>
+                        <td>R$ ${valor.toFixed(2).replace('.', ',')}</td>
+                        <td>${parceiroNome}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('totalReclamatorias').textContent = `R$ ${totalReclamatorias.toFixed(2).replace('.', ',')}`;
+            document.getElementById('qtdReclamatorias').textContent = reclamatorias.length;
+        }
+
+        // Dashboard
+        function atualizarDashboard() {
+            document.getElementById('totalClientes').textContent = clientes.length;
+            document.getElementById('totalParceiros').textContent = parceiros.length;
+            const totalContratos = clientes.reduce((sum, c) => sum + c.valorContrato, 0);
+            document.getElementById('totalContratos').textContent = `R$ ${totalContratos.toFixed(2).replace('.', ',')}`;
+            
+            const mes = document.getElementById('mesReferencia').value || new Date().toISOString().slice(0, 7);
+            const fluxoMes = fluxoCaixa.filter(f => f.mes === mes);
+            let saldoFluxo = 0;
+            fluxoMes.forEach(f => {
+                saldoFluxo += f.credito - f.debito - f.despesasEscritorio - f.retiradasLeila;
+            });
+            document.getElementById('saldoFluxo').textContent = `R$ ${saldoFluxo.toFixed(2).replace('.', ',')}`;
+
+            // Alertas no dashboard
+            const inadimplentes = previsoes.filter(p => !p.pago);
+            const alertasInadDiv = document.getElementById('alertasInadimplencia');
+            if (inadimplentes.length > 0) {
+                let html = '<div class="alert-box danger"><h3>⚠️ Alertas de Inadimplência</h3>';
+                inadimplentes.forEach(p => {
+                    const hoje = new Date();
+                    const dataVencimento = new Date(p.data);
+                    const diasAtraso = Math.floor((hoje - dataVencimento) / (1000 * 60 * 60 * 24));
+                    if (diasAtraso > 0) {
+                        html += `<div class="alert-item">${p.clienteNome} - Atrasado ${diasAtraso} dias</div>`;
+                    }
+                });
+                html += '</div>';
+                alertasInadDiv.innerHTML = html;
+            } else {
+                alertasInadDiv.innerHTML = '';
+            }
+
+            const contasLeilaPendentes = contasLeila.filter(c => !c.pago);
+            const alertasLeilaDiv = document.getElementById('alertasContasLeila');
+            if (contasLeilaPendentes.length > 0) {
+                let html = '<div class="alert-box danger"><h3>⚠️ Contas Pessoais Pendentes</h3>';
+                contasLeilaPendentes.forEach(c => {
+                    html += `<div class="alert-item">${c.descricao} - R$ ${c.valor.toFixed(2).replace('.', ',')}</div>`;
+                });
+                html += '</div>';
+                alertasLeilaDiv.innerHTML = html;
+            } else {
+                alertasLeilaDiv.innerHTML = '';
+            }
+        }
+
+        // IA Chat
+        function enviarMensagem() {
+            const input = document.getElementById('chatInput');
+            const mensagem = input.value.trim();
+
+            if (!mensagem) return;
+
+            const chatMessagesDiv = document.getElementById('chatMessages');
+            
+            // Mensagem do usuário
+            chatMessagesDiv.innerHTML += `<div class="chat-message user">${mensagem}</div>`;
+            input.value = '';
+
+            // Resposta da IA
+            setTimeout(() => {
+                const resposta = gerarRespostaIA(mensagem);
+                chatMessagesDiv.innerHTML += `<div class="chat-message bot">${resposta}</div>`;
+                chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+            }, 500);
+
+            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+        }
+
+        function gerarRespostaIA(pergunta) {
+            pergunta = pergunta.toLowerCase();
+            
+            if (pergunta.includes('gasto') || pergunta.includes('despesa') || pergunta.includes('maior')) {
+                const mes = document.getElementById('mesReferencia').value || new Date().toISOString().slice(0, 7);
+                const fluxoMes = fluxoCaixa.filter(f => f.mes === mes);
+                let totalDespesas = 0;
+                fluxoMes.forEach(f => totalDespesas += f.debito + f.despesasEscritorio);
+                return `Seus gastos totais no mês são de R$ ${totalDespesas.toFixed(2).replace('.', ',')}. Recomendo revisar as despesas de escritório para possíveis reduções.`;
+            }
+
+            if (pergunta.includes('receita') || pergunta.includes('recebimento') || pergunta.includes('faturamento')) {
+                const mes = document.getElementById('mesReferencia').value || new Date().toISOString().slice(0, 7);
+                const fluxoMes = fluxoCaixa.filter(f => f.mes === mes);
+                let totalReceitas = 0;
+                fluxoMes.forEach(f => totalReceitas += f.credito);
+                return `Suas receitas totais no mês são de R$ ${totalReceitas.toFixed(2).replace('.', ',')}. Você tem ${previsoes.filter(p => !p.pago).length} recebimentos pendentes.`;
+            }
+
+            if (pergunta.includes('saldo') || pergunta.includes('caixa')) {
+                const mes = document.getElementById('mesReferencia').value || new Date().toISOString().slice(0, 7);
+                const fluxoMes = fluxoCaixa.filter(f => f.mes === mes);
+                let saldo = 0;
+                fluxoMes.forEach(f => saldo += f.credito - f.debito - f.despesasEscritorio - f.retiradasLeila);
+                return `Seu saldo atual é de R$ ${saldo.toFixed(2).replace('.', ',')}. ${saldo > 0 ? 'Situação positiva!' : 'Atenção: saldo negativo!'}`;
+            }
+
+            if (pergunta.includes('inadimpl') || pergunta.includes('atraso') || pergunta.includes('cliente')) {
+                const inadimplentes = previsoes.filter(p => !p.pago);
+                if (inadimplentes.length === 0) {
+                    return 'Ótima notícia! Nenhum cliente em atraso.';
+                }
+                return `Você tem ${inadimplentes.length} cliente(s) em atraso. Recomendo entrar em contato para cobrar os pagamentos.`;
+            }
+
+            if (pergunta.includes('parceiro')) {
+                const totalParceiros = parceiros.length;
+                const totalClientesParceiros = clientes.filter(c => c.parceiro).length;
+                return `Você tem ${totalParceiros} parceiro(s) cadastrado(s), atendendo ${totalClientesParceiros} cliente(s). Distribua melhor os clientes entre os parceiros.`;
+            }
+
+            const respostas = [
+                'Analisando seus dados financeiros...',
+                'Com base nos dados, você tem ' + clientes.length + ' clientes cadastrados.',
+                'Recomendo revisar as despesas de funcionários.',
+                'Seus parceiros estão gerando bom retorno.',
+                'Mantenha o fluxo de caixa sempre atualizado para melhor controle.'
+            ];
+            return respostas[Math.floor(Math.random() * respostas.length)];
+        }
+
+        // Importar Extratos
+        function importarExtratoCSV() {
+            const arquivo = document.getElementById('arquivoCSV').files[0];
+            if (!arquivo) {
+                alert('Selecione um arquivo CSV!');
+                return;
+            }
+
+            Papa.parse(arquivo, {
+                header: true,
+                dynamicTyping: false,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    if (results.errors.length > 0) {
+                        alert('Erros ao processar CSV:\n' + results.errors.map(e => e.message).join('\n'));
+                        return;
+                    }
+
+                    let movimentosAdicionados = 0;
+                    const dataAtual = new Date();
+
+                    results.data.forEach((row, index) => {
+                        try {
+                            const dataStr = String(row.Data || row.data || row.DATE || '').trim();
+                            const descricao = String(row.Descrição || row.descricao || row.Descricao || row.DESCRICAO || row.Description || '').trim();
+                            const tipo = String(row.Tipo || row.tipo || row.TYPE || '').trim().toLowerCase();
+                            const valorStr = String(row.Valor || row.valor || row.VALUE || '').trim();
+
+                            if (!dataStr || !descricao || !tipo || !valorStr) return;
+
+                            let dataFormatada = dataStr;
+                            if (/^\d{2}\/\d{2}\/\d{4}$/.test(dataStr)) {
+                                const [dia, mes, ano] = dataStr.split('/');
+                                dataFormatada = ano + '-' + mes + '-' + dia;
+                            } else if (!/^\d{4}-\d{2}-\d{2}$/.test(dataStr)) {
+                                return;
+                            }
+
+                            const valor = parseFloat(String(valorStr).replace('.', '').replace(',', '.'));
+                            if (isNaN(valor) || valor <= 0) return;
+
+                            const ehCredito = tipo === 'credito' || tipo === 'entrada' || tipo === 'recebimento' || tipo === 'credit' || tipo === 'income';
+                            const ehDebito = tipo === 'debito' || tipo === 'saida' || tipo === 'pagamento' || tipo === 'debit' || tipo === 'expense';
+
+                            if (!ehCredito && !ehDebito) return;
+
+                            fluxoCaixa.push({
+                                id: Date.now() + movimentosAdicionados,
+                                mes: dataFormatada.slice(0, 7),
+                                saldoAnterior: 0,
+                                descricao: descricao,
+                                debito: ehDebito ? valor : 0,
+                                credito: ehCredito ? valor : 0,
+                                despesasEscritorio: 0,
+                                retiradasLeila: 0
+                            });
+
+                            movimentosAdicionados++;
+
+                        } catch (erro) {
+                            console.error('Erro na linha ' + (index + 2) + ':', erro.message);
+                        }
+                    });
+
+                    if (movimentosAdicionados > 0) {
+                        salvarDados();
+                        atualizarFluxo();
+                        atualizarDashboard();
+                        sincronizarComPrevisaoPagamentos();
+                        alert('✅ ' + movimentosAdicionados + ' movimentos importados com sucesso!');
+                    } else {
+                        alert('❌ Nenhum movimento foi importado. Verifique o formato do CSV.');
+                    }
+                },
+                error: function(error) {
+                    alert('Erro ao ler arquivo: ' + error.message);
+                }
+            });
+        }
+        
+        // Importar Extratos PDF
+        function importarExtratoPDF() {
+            const arquivo = document.getElementById('arquivoPDF').files[0];
+            if (!arquivo) {
+                alert('Selecione um arquivo PDF!');
+                return;
+            }
+            carregarBibliotecas(function() {
+                extrairTextoPDF(arquivo);
+            });
+        }
+        
+        function carregarBibliotecas(callback) {
+            let bibliotecasCarregadas = 0;
+            const totalBibliotecas = 2;
+            function verificarConclusao() {
+                bibliotecasCarregadas++;
+                if (bibliotecasCarregadas === totalBibliotecas) {
+                    callback();
+                }
+            }
+            if (typeof pdfjsLib === 'undefined') {
+                const scriptPdf = document.createElement('script');
+                scriptPdf.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+                scriptPdf.onload = function() {
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    verificarConclusao();
+                };
+                scriptPdf.onerror = function() {
+                    alert('Erro ao carregar PDF.js');
+                };
+                document.head.appendChild(scriptPdf);
+            } else {
+                verificarConclusao();
+            }
+            if (typeof Tesseract === 'undefined') {
+                const scriptTesseract = document.createElement('script');
+                scriptTesseract.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+                scriptTesseract.onload = function() {
+                    verificarConclusao();
+                };
+                scriptTesseract.onerror = function() {
+                    alert('Erro ao carregar Tesseract.js');
+                };
+                document.head.appendChild(scriptTesseract);
+            } else {
+                verificarConclusao();
+            }
+        }
+        
+        function extrairTextoPDF(arquivo) {
+            const fileReader = new FileReader();
+            fileReader.onload = function() {
+                const typedarray = new Uint8Array(this.result);
+                pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                    let textoCompleto = '';
+                    let promessas = [];
+                    
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        promessas.push(
+                            pdf.getPage(i).then(function(page) {
+                                return page.getTextContent().then(function(textContent) {
+                                    return textContent.items.map(function(item) { return item.str; }).join(' ');
+                                });
+                            })
+                        );
+                    }
+                    
+                    Promise.all(promessas).then(function(paginas) {
+                        textoCompleto = paginas.join('\n');
+                        processarTextoPDF(textoCompleto);
+                    }).catch(function(err) {
+                        alert('Erro ao processar PDF: ' + err.message);
+                    });
+                }).catch(function(err) {
+                    alert('Erro ao ler o PDF: ' + err.message);
+                });
+            };
+            fileReader.readAsArrayBuffer(arquivo);
+        }
+        
+        function usarOCR(arquivo) {
+            alert('PDF detectado como imagem. Usando OCR para extrair dados...');
+            const fileReader = new FileReader();
+            fileReader.onload = function() {
+                const typedarray = new Uint8Array(this.result);
+                pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                    let textoOCR = '';
+                    let paginasProcessadas = 0;
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        pdf.getPage(i).then(function(page) {
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            const viewport = page.getViewport({scale: 2});
+                            canvas.width = viewport.width;
+                            canvas.height = viewport.height;
+                            page.render({canvasContext: context, viewport: viewport}).promise.then(function() {
+                                Tesseract.recognize(canvas, 'por').then(function(result) {
+                                    textoOCR += result.data.text + '\n';
+                                    paginasProcessadas++;
+                                    if (paginasProcessadas === pdf.numPages) {
+                                        processarTextoPDF(textoOCR);
+                                    }
+                                }).catch(function(err) {
+                                    alert('Erro ao processar OCR: ' + err.message);
+                                });
+                            });
+                        });
+                    }
+                }).catch(function(err) {
+                    alert('Erro ao ler o PDF para OCR: ' + err.message);
+                });
+            };
+            fileReader.readAsArrayBuffer(arquivo);
+        }
+        
+        function processarTextoPDF(texto) {
+            const mes = new Date().toISOString().slice(0, 7);
+            const linhas = texto.split('\n');
+            let movimentosAdicionados = 0;
+            
+            for (let i = 0; i < linhas.length; i++) {
+                let linha = linhas[i].trim();
+                
+                if (linha.length < 15) continue;
+                if (!/^\d{2}\/\d{2}\/\d{4}/.test(linha)) continue;
+                if (/SALDO DIA|SALDO ANTERIOR/.test(linha)) continue;
+                
+                const matchData = linha.match(/(\d{2}\/\d{2}\/\d{4})/);
+                if (!matchData) continue;
+                
+                let tipo = '';
+                if (/PIX RECEBIDO|DEVOLUCAO PIX|DEPOSITO/.test(linha)) {
+                    tipo = 'CREDITO';
+                } else if (/PIX ENVIADO|COMPRA|SAQUE|TRANSFERENCIA|ESTORNO COMPRA/.test(linha)) {
+                    tipo = 'DEBITO';
+                } else {
+                    continue;
+                }
+                
+                const matchValor = linha.match(/(\d+[.,]\d{2})\s*([DC])(?:\s|$)/);
+                if (!matchValor) continue;
+                
+                const valor = parseFloat(String(matchValor[1]).replace(',', '.'));
+                const indicador = matchValor[2];
+                
+                const ehDebito = indicador === 'D' || tipo === 'DEBITO';
+                const ehCredito = indicador === 'C' || tipo === 'CREDITO';
+                
+                if (valor > 0) {
+                    let descricao = linha.substring(0, 100).trim();
+                    if (/PIX ENVIADO/.test(linha)) descricao = 'PIX Enviado';
+                    else if (/PIX RECEBIDO/.test(linha)) descricao = 'PIX Recebido';
+                    else if (/COMPRA CARTAO/.test(linha)) descricao = 'Compra no Cartao';
+                    else if (/ESTORNO|DEVOLUCAO/.test(linha)) descricao = 'Estorno/Devolucao';
+                    else if (/TRANSFERENCIA/.test(linha)) descricao = 'Transferencia';
+                    else if (/DEPOSITO/.test(linha)) descricao = 'Deposito';
+                    else if (/SAQUE/.test(linha)) descricao = 'Saque';
+                    
+                    fluxoCaixa.push({
+                        id: Date.now() + movimentosAdicionados,
+                        mes,
+                        saldoAnterior: 0,
+                        descricao: descricao,
+                        debito: ehDebito ? valor : 0,
+                        credito: ehCredito ? valor : 0,
+                        despesasEscritorio: 0,
+                        retiradasLeila: 0
+                    });
+                    movimentosAdicionados++;
+                }
+            }
+            
+            if (movimentosAdicionados > 0) {
+                salvarDados();
+                atualizarFluxo();
+                atualizarDashboard();
+                alert(movimentosAdicionados + ' movimentos importados do PDF com sucesso!');
+            } else {
+                const textoExtraido = texto.substring(0, 200);
+                const temTexto = textoExtraido.trim().length > 50;
+                
+                if (!temTexto) {
+                    alert('Erro: O PDF nao contem texto extraivel.\n\nPossiveis causas:\n1. PDF eh uma imagem scaneada\n2. PDF esta protegido\n3. Arquivo corrompido\n\nSolucao:\n- Use um PDF com texto extraivel\n- Ou use CSV para importar\n- Ou preencha manualmente');
+                } else {
+                    alert('Nenhum movimento foi encontrado.\n\nFormato esperado:\nDD/MM/YYYY - HH:MM:SS | Tipo | Valor D/C\n\nExemplo:\n11/12/2025 - 08:45:17 | PIX ENVIADO | 200,00 D');
+                }
+            }
+        }
+
+        // Despesas Dra. Leila
+        function adicionarDespesaLeila() {
+            const categoria = document.getElementById('categoriaDespesa').value;
+            const descricao = document.getElementById('descricaoDespesaLeila').value;
+            const valor = parseFloat(String(document.getElementById('valorDespesaLeila').value).replace(',', '.'));
+            const data = document.getElementById('dataDespesaLeila').value;
+            const mes = document.getElementById('mesDespesasLeila').value || new Date().toISOString().slice(0, 7);
+
+            if (!categoria || !valor) {
+                alert('Preencha os campos obrigatórios!');
+                return;
+            }
+
+            despesasLeila.push({
+                id: Date.now(),
+                mes,
+                categoria,
+                descricao,
+                valor,
+                data: data || new Date().toISOString().split('T')[0]
+            });
+
+            salvarDados();
+            document.getElementById('categoriaDespesa').value = '';
+            document.getElementById('descricaoDespesaLeila').value = '';
+            document.getElementById('valorDespesaLeila').value = '';
+            document.getElementById('dataDespesaLeila').value = '';
+            atualizarTabelaDespesasLeila();
+        }
+
+        function atualizarTabelaDespesasLeila() {
+            const mes = document.getElementById('mesDespesasLeila').value || new Date().toISOString().slice(0, 7);
+            
+            // Puxar retiradas do Fluxo de Caixa
+            const retiradas = fluxoCaixa
+                .filter(f => f.mes === mes && f.retiradasLeila && f.retiradasLeila > 0)
+                .map(f => ({
+                    id: f.id,
+                    data: f.data || formatarData(new Date()),
+                    categoria: 'Retirada Dra. Leila',
+                    descricao: f.descricao,
+                    valor: f.retiradasLeila,
+                    mes: f.mes
+                }));
+            
+            // Combinar com despesas manuais
+            const despesasMes = despesasLeila.filter(d => d.mes === mes);
+            const todasDespesas = [...retiradas, ...despesasMes];
+            
+            const tbody = document.getElementById('despesasLeilaTable');
+            tbody.innerHTML = '';
+            
+            todasDespesas.forEach(despesa => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${despesa.data}</td>
+                        <td>${despesa.categoria}</td>
+                        <td>${despesa.descricao || '-'}</td>
+                        <td>R$ ${despesa.valor.toFixed(2).replace('.', ',')}</td>
+                        <td><button class="btn btn-danger btn-small" onclick="deletarDespesaLeila(${despesa.id})">Deletar</button></td>
+                    </tr>
+                `;
+            });
+
+            atualizarResumoDespesas(mes);
+        }
+
+        function deletarDespesaLeila(id) {
+            despesasLeila = despesasLeila.filter(d => d.id !== id);
+            salvarDados();
+            atualizarTabelaDespesasLeila();
+        }
+
+        function atualizarResumoDespesas(mes) {
+            // Puxar retiradas do Fluxo de Caixa
+            const retiradas = fluxoCaixa
+                .filter(f => f.mes === mes && f.retiradasLeila && f.retiradasLeila > 0)
+                .map(f => ({
+                    id: f.id,
+                    data: f.data || formatarData(new Date()),
+                    categoria: 'Retirada Dra. Leila',
+                    descricao: f.descricao,
+                    valor: f.retiradasLeila,
+                    mes: f.mes
+                }));
+            
+            // Combinar com despesas manuais
+            const despesasMes = [...retiradas, ...despesasLeila.filter(d => d.mes === mes)];
+            
+            // Agrupar por categoria
+            const categorias = {};
+            despesasMes.forEach(despesa => {
+                if (!categorias[despesa.categoria]) {
+                    categorias[despesa.categoria] = 0;
+                }
+                categorias[despesa.categoria] += despesa.valor;
+            });
+            
+            // Calcular total
+            let totalDespesas = 0;
+            Object.values(categorias).forEach(valor => {
+                totalDespesas += valor;
+            });
+
+            // Atualizar tabela de resumo
+            const tbodyResumo = document.getElementById('resumoDespesasTable');
+            tbodyResumo.innerHTML = '';
+            
+            Object.entries(categorias).sort((a, b) => b[1] - a[1]).forEach(([categoria, valor]) => {
+                const percentual = totalDespesas > 0 ? ((valor / totalDespesas) * 100).toFixed(1) : 0;
+                tbodyResumo.innerHTML += `
+                    <tr>
+                        <td><strong>${categoria}</strong></td>
+                        <td>R$ ${valor.toFixed(2).replace('.', ',')}</td>
+                        <td>${percentual}%</td>
+                    </tr>
+                `;
+            });
+
+            // Atualizar total
+            document.getElementById('totalDespesasLeila').textContent = `R$ ${totalDespesas.toFixed(2).replace('.', ',')}`;
+        }
+
+        // Despesas do Escritório
+        function atualizarTabelaDespesasEscritorio() {
+            const mes = document.getElementById('mesDespesasEscritorio').value || new Date().toISOString().slice(0, 7);
+            
+            // Puxar despesas do escritório do Fluxo de Caixa
+            const despesas = fluxoCaixa
+                .filter(f => f.mes === mes && f.despesasEscritorio && f.despesasEscritorio > 0)
+                .map(f => ({
+                    id: f.id,
+                    data: f.data || formatarData(new Date()),
+                    descricao: f.descricao,
+                    valor: f.despesasEscritorio,
+                    mes: f.mes
+                }));
+            
+            const tbody = document.getElementById('despesasEscritorioTable');
+            tbody.innerHTML = '';
+            
+            let totalDespesas = 0;
+            despesas.forEach(despesa => {
+                totalDespesas += despesa.valor;
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${despesa.data}</td>
+                        <td>${despesa.descricao || '-'}</td>
+                        <td>R$ ${despesa.valor.toFixed(2).replace('.', ',')}</td>
+                    </tr>
+                `;
+            });
+            
+            document.getElementById('totalDespesasEscritorioMes').textContent = `R$ ${totalDespesas.toFixed(2).replace('.', ',')}`;
+        }
+
+        // Funcionários Parceiros
+        function adicionarFuncionario() {
+            const parceiroId = document.getElementById('selectParceiroFuncionario').value;
+            const descricao = document.getElementById('descricaoFuncionario').value;
+            const valor = parseFloat(String(document.getElementById('valorFuncionario').value).replace(',', '.'));
+            const data = document.getElementById('dataFuncionario').value;
+            const mes = document.getElementById('mesFuncionarios').value || new Date().toISOString().slice(0, 7);
+
+            if (!parceiroId || !descricao || !valor) {
+                alert('Preencha os campos obrigatórios!');
+                return;
+            }
+
+            funcionariosParceiros.push({
+                id: Date.now(),
+                parceiroId,
+                mes,
+                descricao,
+                debito: valor,
+                credito: 0,
+                data: data || new Date().toISOString().split('T')[0]
+            });
+
+            salvarDados();
+            document.getElementById('descricaoFuncionario').value = '';
+            document.getElementById('valorFuncionario').value = '';
+            document.getElementById('dataFuncionario').value = '';
+            atualizarTabelaFuncionarios();
+        }
+
+        function atualizarTabelaFuncionarios() {
+            const parceiroId = document.getElementById('selectParceiroFuncionario').value;
+            const mes = document.getElementById('mesFuncionarios').value || new Date().toISOString().slice(0, 7);
+            
+            if (!parceiroId) {
+                document.getElementById('funcionariosTable').innerHTML = '';
+                return;
+            }
+
+            const funcionariosMes = funcionariosParceiros.filter(f => f.parceiroId == parceiroId && f.mes === mes).sort((a, b) => new Date(a.data || 0) - new Date(b.data || 0));
+            
+            const tbody = document.getElementById('funcionariosTable');
+            tbody.innerHTML = '';
+            
+            let saldoAnterior = 0;
+            const mesAnterior = new Date(mes + '-01');
+            mesAnterior.setMonth(mesAnterior.getMonth() - 1);
+            const mesAnteriorStr = mesAnterior.toISOString().slice(0, 7);
+            const funcionariosMesAnterior = funcionariosParceiros.filter(f => f.parceiroId == parceiroId && f.mes === mesAnteriorStr);
+            if (funcionariosMesAnterior.length > 0) {
+                let saldoFinal = 0;
+                funcionariosMesAnterior.forEach(f => {
+                    saldoFinal += f.credito - f.debito;
+                });
+                saldoAnterior = saldoFinal;
+            }
+            
+            // Adicionar linha de saldo anterior
+            tbody.innerHTML += `
+                <tr style="background-color: #f0f0f0; font-weight: bold;">
+                    <td colspan="4"><strong>SALDO ANTERIOR:</strong></td>
+                    <td>R$ ${saldoAnterior.toFixed(2).replace('.', ',')}</td>
+                    <td></td>
+                </tr>
+            `;
+            
+            let saldoAtual = saldoAnterior;
+            let totalDebito = 0;
+            let totalCredito = 0;
+            let totalSalario = 0;
+
+            funcionariosMes.forEach(func => {
+                saldoAtual += func.credito - func.debito;
+                totalDebito += func.debito;
+                totalCredito += func.credito;
+                totalSalario += func.salario || 0;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><input type="date" value="${func.data || ''}" onchange="atualizarMovimentoFuncionario(${func.id}, 'data', this.value)" style="width: 100px;"></td>
+                        <td><input type="text" value="${func.descricao}" onchange="atualizarMovimentoFuncionario(${func.id}, 'descricao', this.value)" style="width: 200px;"></td>
+                        <td><input type="number" value="${func.debito.toFixed(2)}" step="0.01" onchange="atualizarMovimentoFuncionario(${func.id}, 'debito', this.value)" style="width: 100px;"></td>
+                        <td><input type="number" value="${func.credito.toFixed(2)}" step="0.01" onchange="atualizarMovimentoFuncionario(${func.id}, 'credito', this.value)" style="width: 100px;"></td>
+                        <td><input type="number" value="${(func.salario || 0).toFixed(2)}" step="0.01" onchange="atualizarMovimentoFuncionario(${func.id}, 'salario', this.value)" style="width: 100px;"></td>
+                        <td>R$ ${saldoAtual.toFixed(2).replace('.', ',')}</td>
+                        <td><button class="btn btn-danger btn-small" onclick="deletarFuncionario(${func.id})">Deletar</button></td>
+                    </tr>
+                `;
+            });
+
+            const rateio = totalDebito * 0.5;
+            document.getElementById('totalFuncionarios').textContent = `R$ ${totalDebito.toFixed(2).replace('.', ',')}`;
+            document.getElementById('rateioFuncionarios').textContent = `R$ ${rateio.toFixed(2).replace('.', ',')}`;
+        }
+
+        function atualizarMovimentoFuncionario(id, campo, valor) {
+            const movimento = funcionariosParceiros.find(f => f.id === id);
+            if (movimento) {
+                if (campo === 'descricao') {
+                    movimento.descricao = valor;
+                } else {
+                    movimento[campo] = parseFloat(valor) || 0;
+                }
+                salvarDados();
+                atualizarTabelaFuncionarios();
+            }
+        }
+
+        function deletarFuncionario(id) {
+            funcionariosParceiros = funcionariosParceiros.filter(f => f.id !== id);
+            salvarDados();
+            atualizarTabelaFuncionarios();
+        }
+
+        function adicionarLinhaFuncionario() {
+            const parceiroId = document.getElementById('selectParceiroFuncionario').value;
+            const mes = document.getElementById('mesFuncionarios').value || new Date().toISOString().slice(0, 7);
+            
+            if (!parceiroId) {
+                alert('Selecione um parceiro!');
+                return;
+            }
+
+            funcionariosParceiros.push({
+                id: Date.now(),
+                parceiroId,
+                mes,
+                descricao: '',
+                debito: 0,
+                credito: 0,
+                data: new Date().toISOString().split('T')[0]
+            });
+            
+            salvarDados();
+            atualizarTabelaFuncionarios();
+        }
+
+        // CLIENTES INADIMPLENTES (BASEADO EM CADASTRO DE CLIENTES)
+        function atualizarTabelaClientesInadimplentes() {
+            const tbody = document.getElementById('inadimplentesTable');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+            const hoje = new Date();
+
+            clientes.forEach(cliente => {
+                if (!cliente.diaVencimento) return;
+
+                // 📌 CALCULAR VENCIMENTO PARA CADA MÊS ATÉ ENCONTRAR UM EM ATRASO
+                let vencimento = null;
+                let encontrouAtraso = false;
+
+                // Verificar os últimos 12 meses
+                for (let i = 0; i < 12; i++) {
+                    const dataTemp = new Date(hoje);
+                    dataTemp.setMonth(dataTemp.getMonth() - i);
+                    
+                    const ano = dataTemp.getFullYear();
+                    const mes = dataTemp.getMonth();
+                    
+                    let vencTemp = new Date(ano, mes, cliente.diaVencimento);
+                    
+                    // Ajustar último dia do mês
+                    if (vencTemp.getMonth() !== mes) {
+                        vencTemp = new Date(ano, mes + 1, 0);
+                    }
+                    
+                    // Se este vencimento está no passado (em atraso)
+                    if (hoje > vencTemp) {
+                        vencimento = vencTemp;
+                        encontrouAtraso = true;
+                        break;
+                    }
+                }
+
+                // Se não encontrou atraso, pula
+                if (!encontrouAtraso || !vencimento) return;
+
+                // 📌 VERIFICAR SE FOI RECEBIDO NO FLUXO DE CAIXA (APÓS O VENCIMENTO)
+                const jaRecebido = fluxoCaixa.some(f => {
+                    const dataFluxo = new Date(f.data.split('/').reverse().join('-'));
+                    return f.credito > 0 && 
+                           dataFluxo > vencimento &&
+                           f.descricao.toLowerCase().includes(cliente.razaoSocial.toLowerCase());
+                });
+
+                // Se pagou, não é inadimplente
+                if (jaRecebido) return;
+
+                // 📌 DIAS DE ATRASO
+                const diasAtraso = Math.floor((hoje - vencimento) / (1000 * 60 * 60 * 24));
+
+                tbody.innerHTML += `
+                    <tr style="background-color:#fff3cd;">
+                        <td>${cliente.razaoSocial}</td>
+                        <td>R$ ${cliente.valorContrato.toFixed(2).replace('.', ',')}</td>
+                        <td>${formatarData(vencimento)}</td>
+                        <td>${diasAtraso}</td>
+                        <td><span style="color:#ff6b6b;">🚨 ${diasAtraso} dias em atraso</span></td>
+                    </tr>
+                `;
+            });
+        }
+
+        
+        function atualizarTabelaInadimplentes() {
+            atualizarTabelaClientesInadimplentes();
+        }
+
+        function marcarComoPago(id) {
+            const previsao = previsoes.find(p => p.id === id);
+            if (previsao) {
+                previsao.pago = true;
+                salvarDados();
+                atualizarTabelaPrevisao();
+                atualizarTabelaInadimplentes();
+            }
+        }
+
+        // Contas Pendentes
+        function atualizarTabelaContasPendentes() {
+            const tbody = document.getElementById('contasPendentesTable');
+            tbody.innerHTML = '';
+            
+            contasLeila.forEach(conta => {
+                if (!conta.pago) {
+                    const dataPrevista = new Date(conta.dataPrevista);
+                    const hoje = new Date();
+                    const diasAtraso = Math.floor((hoje - dataPrevista) / (1000 * 60 * 60 * 24));
+                    const status = diasAtraso > 0 ? `Em atraso há ${diasAtraso} dias` : 'Vencimento próximo';
+                    
+                    tbody.innerHTML += `
+                        <tr style="${diasAtraso > 0 ? 'background-color: #fff3cd;' : ''}">
+                            <td>${conta.descricao}</td>
+                            <td>R$ ${conta.valor.toFixed(2).replace('.', ',')}</td>
+                            <td>${conta.dataPrevista}</td>
+                            <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
+                            <td><span style="color: ${diasAtraso > 0 ? 'red' : 'orange'}; font-weight: bold;">${status}</span></td>
+                            <td><button class="btn btn-danger btn-small" onclick="marcarContaComoPaga(${conta.id})">Marcar Paga</button></td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+
+        function marcarContaComoPaga(id) {
+            const conta = contasLeila.find(c => c.id === id);
+            if (conta) {
+                conta.pago = true;
+                salvarDados();
+                atualizarTabelaContasLeila();
+                atualizarTabelaContasPendentes();
+            }
+        }
+
+
+        // Exportar para PDF
+        function exportarPDFFluxo() {
+            const mes = document.getElementById('mesReferencia').value;
+            const fluxoMes = fluxoCaixa.filter(f => f.mes === mes);
+            
+            let html = '<h1>Fluxo de Caixa - ' + mes + '</h1>';
+            html += '<table border="1" cellpadding="5"><tr><th>Data</th><th>Descrição</th><th>Débito</th><th>Crédito</th><th>Despesas Escritório</th><th>Retiradas Leila</th><th>Saldo</th></tr>';
+            
+            let saldo = 0;
+            fluxoMes.forEach(f => {
+                saldo += f.credito - f.debito - f.despesasEscritorio - f.retiradasLeila;
+                html += `<tr><td>${f.data}</td><td>${f.descricao}</td><td>${f.debito.toFixed(2).replace('.', ',')}</td><td>${f.credito.toFixed(2).replace('.', ',')}</td><td>${f.despesasEscritorio.toFixed(2).replace('.', ',')}</td><td>${f.retiradasLeila.toFixed(2).replace('.', ',')}</td><td>${saldo.toFixed(2).replace('.', ',')}</td></tr>`;
+            });
+            
+            html += '</table>';
+            
+            const newWindow = window.open('', '', 'width=800,height=600');
+            newWindow.document.write(html);
+            newWindow.print();
+        }
+        
+        function exportarPDFPrevisoes() {
+            const mes = document.getElementById('mesPrevisao').value;
+            const previsoesMes = previsoes.filter(p => p.mes === mes);
+            
+            let html = '<h1>Previsões Fixas Leila - ' + mes + '</h1>';
+            html += '<table border="1" cellpadding="5"><tr><th>Data</th><th>Cliente</th><th>Descrição</th><th>Débito</th><th>Crédito</th><th>Saldo</th><th>Status</th></tr>';
+            
+            let saldo = 0;
+            previsoesMes.forEach(p => {
+                const cliente = clientes.find(c => c.id == p.clienteId);
+                saldo += p.credito - p.debito;
+                const status = p.pago ? 'Pago' : 'Pendente';
+                html += `<tr><td>${p.data}</td><td>${cliente ? cliente.razaoSocial : 'N/A'}</td><td>${p.descricao}</td><td>${p.debito.toFixed(2).replace('.', ',')}</td><td>${p.credito.toFixed(2).replace('.', ',')}</td><td>${saldo.toFixed(2).replace('.', ',')}</td><td>${status}</td></tr>`;
+            });
+            
+            html += '</table>';
+            
+            const newWindow = window.open('', '', 'width=800,height=600');
+            newWindow.document.write(html);
+            newWindow.print();
+        }
+
+
+        // Sistema de Autenticação
+        let usuarioLogado = null;
+        let tipoUsuario = null; // 'admin' ou 'parceiro'
+        let parceiroLogado = null;
+
+        // Banco de dados de usuários (em produção seria um servidor)
+        const usuariosRegistrados = {
+            'admin': { senha: 'admin', tipo: 'admin' },
+            'parceiro1': { senha: '123456', tipo: 'parceiro', parceiroId: 1 },
+            'parceiro2': { senha: '123456', tipo: 'parceiro', parceiroId: 2 },
+            'parceiro3': { senha: '123456', tipo: 'parceiro', parceiroId: 3 }
+        };
+
+        function fazerLogin() {
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+
+            if (!user || !pass) {
+                errorDiv.textContent = 'Usuário e senha são obrigatórios!';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            const usuario = usuariosRegistrados[user];
+            if (!usuario || usuario.senha !== pass) {
+                errorDiv.textContent = 'Usuário ou senha incorretos!';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            // Login bem-sucedido
+            usuarioLogado = user;
+            tipoUsuario = usuario.tipo;
+            parceiroLogado = usuario.parceiroId || null;
+
+            // Salvar sessão
+            sessionStorage.setItem('usuarioLogado', user);
+            sessionStorage.setItem('tipoUsuario', tipoUsuario);
+            if (parceiroLogado) sessionStorage.setItem('parceiroLogado', parceiroLogado);
+
+            // Fechar modal
+            fecharModalAuth();
+            
+            // Ocultar botões de autenticação
+            document.getElementById('authButtons').style.display = 'none';
+
+            // Aplicar restrições de acesso
+            aplicarRestricoes();
+            atualizarBotoes();
+        }
+
+        function fazerLogout() {
+            usuarioLogado = null;
+            tipoUsuario = null;
+            parceiroLogado = null;
+            sessionStorage.clear();
+            
+            // Mostrar botões de autenticação novamente
+            document.getElementById('authButtons').style.display = 'flex';
+            
+            // Remover botão de logout
+            const btnLogout = document.getElementById('btnLogout');
+            if (btnLogout) btnLogout.remove();
+            
+            // Limpar formulários
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPassword').value = '';
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        function aplicarRestricoes() {
+            if (tipoUsuario === 'admin') {
+                // Admin vê tudo
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'auto';
+                    btn.disabled = false;
+                });
+                
+                // Adicionar botão de logout
+                adicionarBotaoLogout();
+            } else if (tipoUsuario === 'parceiro') {
+                // Parceiro vê apenas sua planilha
+                const botoes = document.querySelectorAll('.tab-button');
+                botoes.forEach((btn, index) => {
+                    // Índice 4 é a aba "Planilha Parceiros" (0-indexed)
+                    if (index === 4) {
+                        btn.style.opacity = '1';
+                        btn.style.pointerEvents = 'auto';
+                        btn.disabled = false;
+                    } else {
+                        btn.style.opacity = '0.3';
+                        btn.style.pointerEvents = 'none';
+                        btn.disabled = true;
+                    }
+                });
+                
+                // Ir direto para a planilha do parceiro
+                irParaAba(4);
+                
+                // Adicionar botão de logout
+                adicionarBotaoLogout();
+            }
+        }
+
+        function adicionarBotaoLogout() {
+            if (document.getElementById('btnLogout')) return; // Já existe
+            
+            const header = document.querySelector('.app-header');
+            const logoutBtn = document.createElement('button');
+            logoutBtn.id = 'btnLogout';
+            logoutBtn.className = 'btn btn-danger';
+            logoutBtn.textContent = `🚪 Sair (${usuarioLogado})`;
+            logoutBtn.style.position = 'absolute';
+            logoutBtn.style.top = '20px';
+            logoutBtn.style.right = '20px';
+            logoutBtn.onclick = fazerLogout;
+            
+            header.style.position = 'relative';
+            header.appendChild(logoutBtn);
+        }
+
+
+        function sincronizarContasPendentes() {
+            const mes = document.getElementById('mesReferencia').value || new Date().toISOString().slice(0, 7);
+            const previsoes = previsoesDespesas[mes] || [];
+            const fluxoMes = fluxoCaixa.filter(f => f.mes === mes);
+            
+            // Limpar contas pendentes
+            contasPendentesLeila = [];
+            
+            // Adicionar previsões que ainda não foram pagas
+            previsoes.forEach(previsao => {
+                const foiPaga = fluxoMes.some(f => 
+                    f.descricao.toLowerCase().includes(previsao.descricao.toLowerCase()) && 
+                    f.debito > 0
+                );
+                
+                if (!foiPaga) {
+                    contasPendentesLeila.push({
+                        id: previsao.id,
+                        descricao: previsao.descricao,
+                        valor: previsao.valor,
+                        dataPrevista: previsao.data,
+                        status: 'Pendente'
+                    });
+                }
+            });
+            
+            salvarDados();
+        }
+        
+        function sincronizarClientesInadimplentes() {
+            const mes = document.getElementById('mesReferencia').value || new Date().toISOString().slice(0, 7);
+            const fluxoMes = fluxoCaixa.filter(f => f.mes === mes);
+            
+            // Limpar inadimplentes
+            clientesInadimplentes = [];
+            
+            // Verificar cada cliente
+            clientes.forEach(cliente => {
+                const valorContrato = cliente.valorContrato || 0;
+                const foiRecebido = fluxoMes.some(f => 
+                    (f.descricao.toLowerCase().includes(cliente.razaoSocial.toLowerCase()) || 
+                     f.descricao.toLowerCase().includes(cliente.nomeFantasia.toLowerCase())) && 
+                    f.credito >= valorContrato
+                );
+                
+                if (!foiRecebido && valorContrato > 0) {
+                    clientesInadimplentes.push({
+                        id: cliente.id,
+                        cliente: cliente.razaoSocial || cliente.nomeFantasia,
+                        valorPendente: valorContrato,
+                        dataVencimento: cliente.dataVencimentoMensal || '',
+                        status: 'Inadimplente'
+                    })
+
+        
+        function atualizarTabelaPrevisaoDespesas() {
+            const hoje = new Date();
+            const mesAtual = hoje.toISOString().slice(0, 7);
+            const mes = document.getElementById('mesPrevisaoDespesas').value || mesAtual;
+            const previsoes = previsaoDespesas[mes] || [];
+            const tbody = document.getElementById('previsaoDespesasTable');
+            
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            let total = 0;
+            
+            previsoes.forEach((previsao, index) => {
+                total += previsao.valor;
+                tbody.innerHTML += `
+                    <tr>
+                        <td><input type="date" value="${previsao.data || ''}" onchange="atualizarPrevisaoDespesa(${previsao.id}, 'data', this.value)"></td>
+                        <td><input type="text" value="${previsao.descricao}" onchange="atualizarPrevisaoDespesa(${previsao.id}, 'descricao', this.value)"></td>
+                        <td><input type="number" value="${previsao.valor.toFixed(2)}" step="0.01" onchange="atualizarPrevisaoDespesa(${previsao.id}, 'valor', this.value)"></td>
+                        <td><input type="date" value="${previsao.vencimento || ''}" onchange="atualizarPrevisaoDespesa(${previsao.id}, 'vencimento', this.value)"></td>
+                        <td><input type="date" value="${previsao.dataPagamento || ''}" onchange="atualizarPrevisaoDespesa(${previsao.id}, 'dataPagamento', this.value)" disabled></td>
+                        <td><button class="btn btn-danger btn-small" onclick="deletarPrevisaoDespesa(${previsao.id})">Deletar</button></td>
+                    </tr>
+                `;
+            });
+            
+            const totalRow = document.getElementById('totalPrevisaoDespesas');
+            if (totalRow) {
+                totalRow.textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+            }
+        }
+        
+        function atualizarPrevisaoDespesa(id, campo, valor) {
+            const mes = document.getElementById('mesPrevisaoDespesas').value;
+            const previsao = previsaoDespesas[mes].find(p => p.id === id);
+            if (previsao) {
+                if (campo === 'valor') {
+                    previsao.valor = parseFloat(valor) || 0;
+                } else {
+                    previsao[campo] = valor;
+                }
+                salvarDados();
+                atualizarTabelaPrevisaoDespesas();
+                sincronizarContasPendentes();
+            }
+        }
+        
+        function deletarPrevisaoDespesa(id) {
+            const mes = document.getElementById('mesPrevisaoDespesas').value;
+            previsaoDespesas[mes] = previsaoDespesas[mes].filter(p => p.id !== id);
+            salvarDados();
+            atualizarTabelaPrevisaoDespesas();
+            sincronizarContasPendentes();
+        }
+        
+        function exportarExtratosPDF() {
+            alert('Funcionalidade de exportação PDF será implementada em breve!');
+        }
+
+;
+                }
+            });
+            
+            salvarDados();
+        }
+
+        function verificarAutenticacao() {
+            const user = sessionStorage.getItem('usuarioLogado');
+            const tipo = sessionStorage.getItem('tipoUsuario');
+            
+            if (user && tipo) {
+                usuarioLogado = user;
+                tipoUsuario = tipo;
+                parceiroLogado = sessionStorage.getItem('parceiroLogado');
+                
+                aplicarRestricoes();
+                atualizarBotoes();
+                
+                // Ocultar botões de login/cadastro se já logado
+                document.getElementById('authButtons').style.display = 'none';
+                fecharModalAuth();
+            }
+        }
+
+
+        
+
+        // Funções do Modal de Autenticação
+        function abrirModalAuth(aba) {
+            document.getElementById('authModal').classList.add('active');
+            trocarAbaAuth(aba);
+        }
+
+        function fecharModalAuth() {
+            document.getElementById('authModal').classList.remove('active');
+        }
+
+        function trocarAbaAuth(aba) {
+            // Esconder todos os formulários
+            document.getElementById('formEntrar').classList.remove('active');
+            document.getElementById('formCadastro').classList.remove('active');
+            
+            // Remover ativa de todos os botões
+            document.querySelectorAll('.auth-modal-tab').forEach(btn => btn.classList.remove('active'));
+            
+            // Mostrar formulário selecionado
+            if (aba === 'entrar') {
+                document.getElementById('formEntrar').classList.add('active');
+                document.querySelectorAll('.auth-modal-tab')[0].classList.add('active');
+                document.getElementById('loginError').classList.add('hidden');
+            } else if (aba === 'cadastro') {
+                document.getElementById('formCadastro').classList.add('active');
+                document.querySelectorAll('.auth-modal-tab')[1].classList.add('active');
+                document.getElementById('cadastroError').classList.add('hidden');
+            }
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modal = document.getElementById('authModal');
+            if (event.target === modal) {
+                fecharModalAuth();
+            }
+        }
+
+        // Trocar abas de login/cadastro
+        function trocarAbaLogin(aba) {
+            // Esconder todas as abas
+            document.getElementById('abaEntrar').classList.remove('active');
+            document.getElementById('abaCadastro').classList.remove('active');
+            
+            // Remover ativa de todos os botões
+            document.querySelectorAll('.login-tab').forEach(btn => btn.classList.remove('active'));
+            
+            // Mostrar aba selecionada
+            if (aba === 'entrar') {
+                document.getElementById('abaEntrar').classList.add('active');
+                document.querySelectorAll('.login-tab')[0].classList.add('active');
+                document.getElementById('loginError').classList.add('hidden');
+            } else if (aba === 'cadastro') {
+                document.getElementById('abaCadastro').classList.add('active');
+                document.querySelectorAll('.login-tab')[1].classList.add('active');
+                document.getElementById('cadastroError').classList.add('hidden');
+            }
+        }
+
+        // Fazer cadastro de novo parceiro
+        function fazerCadastro() {
+            const nome = document.getElementById('cadastroNome').value.trim();
+            const email = document.getElementById('cadastroEmail').value.trim();
+            const user = document.getElementById('cadastroUser').value.trim();
+            const pass = document.getElementById('cadastroPassword').value;
+            const errorDiv = document.getElementById('cadastroError');
+            const sucessoDiv = document.getElementById('cadastroSucesso');
+
+            errorDiv.classList.add('hidden');
+            sucessoDiv.style.display = 'none';
+
+            // Validações
+            if (!nome || !email || !user || !pass) {
+                errorDiv.textContent = 'Todos os campos são obrigatórios!';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (user.length < 3) {
+                errorDiv.textContent = 'Usuário deve ter pelo menos 3 caracteres!';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (pass.length < 4) {
+                errorDiv.textContent = 'Senha deve ter pelo menos 4 caracteres!';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            // Verificar se usuário já existe
+            if (usuariosRegistrados[user]) {
+                errorDiv.textContent = 'Este usuário já existe! Escolha outro.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            // Registrar novo parceiro
+            const novoParceiroId = Math.max(...Object.values(usuariosRegistrados)
+                .filter(u => u.tipo === 'parceiro')
+                .map(u => u.parceiroId || 0), 0) + 1;
+
+            usuariosRegistrados[user] = {
+                senha: pass,
+                tipo: 'parceiro',
+                parceiroId: novoParceiroId,
+                nome: nome,
+                email: email
+            };
+
+            // Salvar no localStorage
+            localStorage.setItem('usuariosRegistrados', JSON.stringify(usuariosRegistrados));
+
+            // Mostrar mensagem de sucesso
+            sucessoDiv.textContent = `✅ Cadastro realizado com sucesso! Bem-vindo, ${nome}! Agora faça login.`;
+            sucessoDiv.style.display = 'block';
+
+            // Limpar formulário
+            document.getElementById('cadastroNome').value = '';
+            document.getElementById('cadastroEmail').value = '';
+            document.getElementById('cadastroUser').value = '';
+            document.getElementById('cadastroPassword').value = '';
+
+            // Voltar para aba de login após 2 segundos
+            setTimeout(() => {
+                trocarAbaLogin('entrar');
+            }, 2000);
+        }
+
+        // Previsão de Pagamentos
+        function adicionarPagamentoPrevisao() {
+            const nome = document.getElementById('nomePagamento').value.trim();
+            const valor = parseFloat(String(document.getElementById('valorPagamento').value).replace(',', '.')) || 0;
+            const vencimento = document.getElementById('vencimentoPagamento').value;
+
+            if (!nome || valor <= 0 || !vencimento) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+
+            const mesAtual = new Date().toISOString().slice(0, 7);
+            if (!previsaoPagamentos[mesAtual]) {
+                previsaoPagamentos[mesAtual] = [];
+            }
+
+            previsaoPagamentos[mesAtual].push({
+                nome: nome,
+                valor: valor,
+                vencimento: vencimento,
+                pago: false,
+                dataPagamento: null
+            });
+
+            salvarDados();
+            atualizarTabelaPrevisaoPagamentos();
+
+            document.getElementById('nomePagamento').value = '';
+            document.getElementById('valorPagamento').value = '';
+            document.getElementById('vencimentoPagamento').value = '';
+        }
+
+        function atualizarTabelaPrevisaoPagamentos() {
+            const mesAtual = new Date().toISOString().slice(0, 7);
+            const pagamentos = previsaoPagamentos[mesAtual] || [];
+            const tabela = document.getElementById('previsaoPagamentosTable');
+            tabela.innerHTML = '';
+
+            const hoje = new Date();
+            let total = 0;
+            
+            pagamentos.forEach((pag, index) => {
+                const dataVencimento = new Date(pag.vencimento);
+                dataVencimento.setHours(0, 0, 0, 0);
+                
+                const diasAtraso = Math.floor((hoje - dataVencimento) / (1000 * 60 * 60 * 24));
+                const status = pag.pago ? '✅ Pago' : (diasAtraso > 0 ? '🚨 Em atraso' : '⏳ Pendente');
+                
+                if (!pag.pago) {
+                    const row = tabela.insertRow();
+                    row.style.backgroundColor = diasAtraso > 0 ? '#ffeeba' : '';
+                    row.innerHTML = `
+                        <td>${pag.nome}</td>
+                        <td>R$ ${pag.valor.toFixed(2).replace('.', ',')}</td>
+                        <td>${formatarData(dataVencimento)}</td>
+                        <td>${diasAtraso > 0 ? diasAtraso : '-'}</td>
+                        <td><span style="color: ${diasAtraso > 0 ? '#ff6b6b' : '#666'};">${status}</span></td>
+                        <td><button class="btn btn-danger" onclick="removerPagamentoPrevisao(${index})">Remover</button></td>
+                    `;
+                    total += pag.valor;
+                }
+            });
+
+            document.getElementById('totalPrevisaoPagamentos').textContent = `R$ ${total.toFixed(2).replace('.', ',').replace('.', ',')}`;
+        }
+
+        function removerPagamentoPrevisao(index) {
+            const mesAtual = new Date().toISOString().slice(0, 7);
+            if (previsaoPagamentos[mesAtual]) {
+                previsaoPagamentos[mesAtual].splice(index, 1);
+                salvarDados();
+                atualizarTabelaPrevisaoPagamentos();
+            }
+        }
+
+        function sincronizarPagamentoPrevisao() {
+            const mesAtual = new Date().toISOString().slice(0, 7);
+            const pagamentos = previsaoPagamentos[mesAtual] || [];
+            const fluxoAtual = fluxoCaixa[mesAtual] || [];
+
+            fluxoAtual.forEach(mov => {
+                if (mov.tipo === 'debito' && mov.descricao) {
+                    pagamentos.forEach(pag => {
+                        if (mov.descricao.toLowerCase().includes(pag.nome.toLowerCase()) && !pag.pago) {
+                            pag.pago = true;
+                            pag.dataPagamento = new Date().toISOString().slice(0, 10);
+                        }
+                    });
+                }
+            });
+
+            salvarDados();
+            atualizarTabelaPrevisaoPagamentos();
+        }
+
+        // Previsão de Recebimentos
+        function atualizarTabelaPrevisaoRecebimentos() {
+            const mes = document.getElementById('mesPrevisaoRecebimentos').value || new Date().toISOString().slice(0, 7);
+            const [anoSelecionado, mesSelecionado] = mes.split('-').map(Number);
+            
+            // Inicializar previsaoRecebimentos[mes] se não existir
+            if (!previsaoRecebimentos[mes]) {
+                previsaoRecebimentos[mes] = [];
+            }
+            
+            // Limpar previsões do mês
+            previsaoRecebimentos[mes] = [];
+            
+            clientes.forEach(cliente => {
+                // Se o cliente tem dia de vencimento definido
+                // E NÃO é 100% Retirada Parceiros
+                if (cliente.diaVencimento && cliente.retiradadaParceiros !== 'sim') {
+                    const diaVenc = cliente.diaVencimento;
+                    
+                    // Criar data de vencimento para o mês selecionado
+                    let vencimento = new Date(anoSelecionado, mesSelecionado - 1, diaVenc);
+                    
+                    // Se o dia não existe no mês (ex: 31 de fevereiro), usar o último dia do mês
+                    if (vencimento.getMonth() !== mesSelecionado - 1) {
+                        vencimento = new Date(anoSelecionado, mesSelecionado, 0);
+                    }
+                    
+                    // Verificar se já foi recebido no Fluxo de Caixa para este mês
+                    const fluxoMes = fluxoCaixa.filter(f => f.mes === mes);
+                    
+                    const jaRecebido = fluxoMes.some(f =>
+                        f.descricao.toLowerCase().includes(cliente.razaoSocial.toLowerCase()) &&
+                        f.credito > 0
+                    );
+                    
+                    if (!jaRecebido) {
+                        const hoje = new Date();
+                        const diasAtraso = Math.floor((hoje - vencimento) / (1000 * 60 * 60 * 24));
+                        const status = diasAtraso > 0 ? `🚨 ${diasAtraso} dias em atraso` : '✅ No prazo';
+                        const statusClass = diasAtraso > 0 ? 'color: #ff6b6b;' : 'color: #51cf66;';
+                        
+                        previsaoRecebimentos[mes].push({
+                            cliente: cliente.razaoSocial,
+                            valor: cliente.valorContrato,
+                            vencimento: formatarData(vencimento),
+                            diasAtraso: diasAtraso,
+                            status: status,
+                            statusClass: statusClass
+                        });
+                    }
+                }
+            });
+            
+            const tbody = document.getElementById('previsaoRecebimentosTable');
+            tbody.innerHTML = '';
+            
+            let total = 0;
+            previsaoRecebimentos[mes].forEach(rec => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${rec.cliente}</td>
+                        <td>R$ ${rec.valor.toFixed(2).replace('.', ',')}</td>
+                        <td>${rec.vencimento}</td>
+                        <td>${rec.diasAtraso}</td>
+                        <td><span style="${rec.statusClass}">${rec.status}</span></td>
+                        <td>
+                            <button class="btn btn-success btn-small" onclick="marcarComoRecebido('${rec.cliente}', ${rec.valor})">Recebido</button>
+                        </td>
+                    </tr>
+                `;
+                total += rec.valor;
+            });
+            
+            document.getElementById('totalPrevisaoRecebimentos').textContent = `R$ ${total.toFixed(2).replace('.', ',')}`;
+            salvarDados();
+        }
+
+        function marcarComoRecebido(nomeCliente, valor) {
+            const mes = document.getElementById('mesPrevisaoRecebimentos').value || new Date().toISOString().slice(0, 7);
+            const data = formatarData(new Date());
+            
+            // Adicionar automaticamente no Fluxo de Caixa
+            fluxoCaixa.push({
+                id: Date.now(),
+                data: data,
+                mes: mes,
+                descricao: `Recebimento ${nomeCliente}`,
+                debito: 0,
+                credito: valor,
+                despesasEscritorio: 0,
+                retiradasLeila: 0,
+                parceiroId: '',
+                marcadoRecebimento: true
+            });
+            
+            salvarDados();
+            atualizarTabelaPrevisaoRecebimentos();
+            atualizarFluxo();
+            atualizarTabelaClientesInadimplentes();
+            
+            alert(`✅ Recebimento de ${nomeCliente} marcado como recebido!`);
+        }
+
+
+        // Funcoes de Importacao de PDF (Escopo Global)
+        function importarExtratoPDF() {
+            const arquivo = document.getElementById('arquivoPDF').files[0];
+            if (!arquivo) {
+                alert('Selecione um arquivo PDF!');
+                return;
+            }
+            alert('Importando PDF... Aguarde alguns segundos...');
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+            script.onload = function() {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                const fileReader = new FileReader();
+                fileReader.onload = function(e) {
+                    const typedarray = new Uint8Array(e.target.result);
+                    pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                        let textoCompleto = '';
+                        let paginasProcessadas = 0;
+                        let numPaginas = pdf.numPages;
+                        for (let i = 1; i <= numPaginas; i++) {
+                            pdf.getPage(i).then(function(page) {
+                                page.getTextContent().then(function(textContent) {
+                                    const pageText = textContent.items.map(item => item.str).join(' ');
+                                    textoCompleto += pageText + '\n';
+                                    paginasProcessadas++;
+                                    if (paginasProcessadas === numPaginas) {
+                                        if (textoCompleto.trim().length < 50) {
+                                            usarOCRParaPDF(pdf, numPaginas);
+                                        } else {
+                                            processarTextoPDFGlobal(textoCompleto);
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    }).catch(function(err) {
+                        alert('Erro: ' + err.message);
+                    });
+                };
+                fileReader.readAsArrayBuffer(arquivo);
+            };
+            script.onerror = function() {
+                alert('Erro ao carregar PDF.js');
+            };
+            document.head.appendChild(script);
+        }
+        function processarTextoPDFGlobal(texto) {
+            const mes = new Date().toISOString().slice(0, 7);
+            const linhas = texto.split('\n');
+            let movimentosAdicionados = 0;
+            for (let i = 0; i < linhas.length; i++) {
+                let linha = linhas[i].trim();
+                if (linha.length < 15) continue;
+                if (!/\d{2}\/\d{2}\/\d{4}/.test(linha)) continue;
+                if (/SALDO DIA|SALDO ANTERIOR/.test(linha)) continue;
+                const matchData = linha.match(/(\d{2}\/\d{2}\/\d{4})/);
+                if (!matchData) continue;
+                let tipo = '';
+                if (/PIX RECEBIDO|DEVOLUCAO PIX|DEPOSITO/.test(linha)) {
+                    tipo = 'CREDITO';
+                } else if (/PIX ENVIADO|COMPRA|SAQUE|TRANSFERENCIA|ESTORNO COMPRA/.test(linha)) {
+                    tipo = 'DEBITO';
+                } else {
+                    continue;
+                }
+                const matchValor = linha.match(/(\d+[.,]\d{2})\s*([DC])?/);
+                if (!matchValor) continue;
+                const valor = parseFloat(String(matchValor[1]).replace(',', '.'));
+                const indicador = matchValor[2];
+                const ehDebito = indicador === 'D' || tipo === 'DEBITO';
+                const ehCredito = indicador === 'C' || tipo === 'CREDITO';
+                if (valor > 0) {
+                    let descricao = linha.substring(0, 100).trim();
+                    if (/PIX ENVIADO/.test(linha)) descricao = 'PIX Enviado';
+                    else if (/PIX RECEBIDO/.test(linha)) descricao = 'PIX Recebido';
+                    else if (/COMPRA CARTAO/.test(linha)) descricao = 'Compra no Cartao';
+                    else if (/ESTORNO|DEVOLUCAO/.test(linha)) descricao = 'Estorno/Devolucao';
+                    else if (/TRANSFERENCIA/.test(linha)) descricao = 'Transferencia';
+                    else if (/DEPOSITO/.test(linha)) descricao = 'Deposito';
+                    else if (/SAQUE/.test(linha)) descricao = 'Saque';
+                    if (typeof fluxoCaixa !== 'undefined') {
+                        fluxoCaixa.push({
+                            id: Date.now() + movimentosAdicionados,
+                            mes,
+                            saldoAnterior: 0,
+                            descricao: descricao,
+                            debito: ehDebito ? valor : 0,
+                            credito: ehCredito ? valor : 0,
+                            despesasEscritorio: 0,
+                            retiradasLeila: 0
+                        });
+                        movimentosAdicionados++;
+                    }
+                }
+            }
+            if (movimentosAdicionados > 0) {
+                if (typeof salvarDados === 'function') salvarDados();
+                if (typeof atualizarFluxo === 'function') atualizarFluxo();
+                if (typeof atualizarDashboard === 'function') atualizarDashboard();
+                alert('Sucesso!\n\n' + movimentosAdicionados + ' movimentos foram importados.');
+            } else {
+                const textoExtraido = texto.substring(0, 200);
+                const temTexto = textoExtraido.trim().length > 50;
+                if (!temTexto) {
+                    alert('Erro: O PDF nao contem texto extraivel.\n\nPossiveis causas:\n1. PDF eh uma imagem scaneada\n2. PDF esta protegido\n\nSolucao: Use um PDF com texto ou importe via CSV.');
+                } else {
+                    alert('Nenhum movimento encontrado no formato esperado.');
+                }
+            }
+        }
+        
+        function usarOCRParaPDF(pdf, numPaginas) {
+            alert('PDF eh uma imagem. Usando OCR para extrair texto... Aguarde...');
+            const scriptTesseract = document.createElement('script');
+            scriptTesseract.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js';
+            scriptTesseract.onload = function() {
+                let textoOCR = '';
+                let paginasOCR = 0;
+                for (let i = 1; i <= numPaginas; i++) {
+                    pdf.getPage(i).then(function(page) {
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        const viewport = page.getViewport({scale: 2});
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        page.render({canvasContext: context, viewport: viewport}).promise.then(function() {
+                            Tesseract.recognize(canvas, 'por').then(function(result) {
+                                textoOCR += result.data.text + '\n';
+                                paginasOCR++;
+                                if (paginasOCR === numPaginas) {
+                                    processarTextoPDFGlobal(textoOCR);
+                                }
+                            }).catch(function(err) {
+                                alert('Erro no OCR: ' + err.message);
+                            });
+                        });
+                    });
+                }
+            };
+            scriptTesseract.onerror = function() {
+                alert('Erro ao carregar Tesseract.js');
+            };
+            document.head.appendChild(scriptTesseract);
+        }
+                // Inicializar
+        window.addEventListener('load', () => {
+            // Carregar usuários do localStorage se existirem
+            const usuariosArmazenados = localStorage.getItem('usuariosRegistrados');
+            if (usuariosArmazenados) {
+                Object.assign(usuariosRegistrados, JSON.parse(usuariosArmazenados));
+            }
+            
+            verificarAutenticacao();
+            carregarDados();
+            atualizarBotoes();
+            atualizarTabelaClientes();
+            atualizarTabelaParceiros();
+            atualizarFluxo();
+            atualizarTabelaPrevisao();
+            atualizarTabelaContasLeila();
+            atualizarTabelaDespesasLeila();
+            atualizarTabelaInadimplentes();
+            atualizarTabelaContasPendentes();
+            
+            // Definir mês atual
+            const hoje = new Date();
+            const mesAtual = hoje.toISOString().slice(0, 7);
+            document.getElementById('mesReferencia').value = mesAtual;
+            document.getElementById('mesReclamatorias').value = mesAtual;
+            document.getElementById('mesPlanilhaParceiro').value = mesAtual;
+            document.getElementById('mesDespesasLeila').value = mesAtual;
+        });
+
+        // REGRA 1: Puxar 50% para Planilha do Parceiro em CRÉDITO
+        function puxar50ParaPlanilhaParceiro(movimento) {
+            if (!movimento.parceiroId || movimento.credito <= 0) return;
+            
+            const parceiro = parceiros.find(p => p.id == movimento.parceiroId);
+            if (!parceiro) return;
+            
+            // Verificar se já existe lançamento para este movimento
+            const lancamentoExistente = planilhaParceiros.find(l => l.movimentoId === movimento.id && l.tipo === '50%');
+            
+            if (!lancamentoExistente) {
+                const valor50 = movimento.credito * 0.5;
+                const novoLancamento = {
+                    id: Date.now(),
+                    parceiroId: movimento.parceiroId,
+                    movimentoId: movimento.id,
+                    tipo: '50%',
+                    data: movimento.data,
+                    descricao: `50% - ${movimento.descricao}`,
+                    debito: 0,
+                    credito: valor50
+                };
+                planilhaParceiros.push(novoLancamento);
+                console.log('REGRA 1: 50% puxado para Planilha do Parceiro - Crédito:', valor50);
+                salvarDados();
+                carregarPlanilhaParceiro();
+            }
+        }
+
+        // REGRA 2: Puxar 100% para Planilha do Parceiro em DÉBITO quando cliente é cadastrado com 100%
+        function puxar100ParaPlanilhaParceiro(cliente) {
+            if (cliente.retiradadaParceiros !== 'sim' || !cliente.parceiro || cliente.valor <= 0) return;
+            
+            const parceiro = parceiros.find(p => p.id == cliente.parceiro);
+            if (!parceiro) return;
+            
+            // Verificar se já existe lançamento para este cliente
+            const lancamentoExistente = planilhaParceiros.find(l => l.clienteId === cliente.id && l.tipo === '100%');
+            
+            if (!lancamentoExistente) {
+                const novoLancamento = {
+                    id: Date.now(),
+                    parceiroId: cliente.parceiro,
+                    clienteId: cliente.id,
+                    tipo: '100%',
+                    data: new Date().toISOString().split('T')[0],
+                    descricao: `100% - ${cliente.razaoSocial}`,
+                    debito: cliente.valor,
+                    credito: 0
+                };
+                planilhaParceiros.push(novoLancamento);
+                console.log('REGRA 2: 100% puxado para Planilha do Parceiro - Débito:', cliente.valor);
+                salvarDados();
+            }
+        }
+
+        // Relatório de Recebimentos por Data
+        function carregarParceiroRelatorioRecebimentos() {
+            // Função não necessária pois as opções já estão no HTML
+            // e a opção TODOS já foi adicionada
+        }
+
+        function atualizarRelatorioRecebimentos() {
+            const mes = document.getElementById('mesRelatorioRecebimentos').value || new Date().toISOString().slice(0, 7);
+            const parceiroId = document.getElementById('parceiroRelatorioRecebimentos').value;
+            const [anoSelecionado, mesSelecionado] = mes.split('-').map(Number);
+            
+            if (!parceiroId) {
+                document.getElementById('relatorioRecebimentosTable').innerHTML = '';
+                return;
+            }
+            
+            // Filtrar clientes
+            let clientesParceiro = [];
+            let parceiroNome = '';
+            
+            if (parceiroId === 'TODOS') {
+                // Mostrar todos os clientes
+                clientesParceiro = clientes;
+                parceiroNome = 'TODOS';
+            } else {
+                // Encontrar o parceiro selecionado
+                const parceiro = parceiros.find(p => p.id == parceiroId);
+                parceiroNome = parceiro.nome;
+                // Filtrar clientes deste parceiro (comparar pelo ID do parceiro)
+                clientesParceiro = clientes.filter(c => c.parceiro == parceiroId || c.parceiroResponsavel === parceiro.nome);
+            }
+            
+            // Agrupar por dia de vencimento
+            const recebimentosPorDia = {};
+            
+            clientesParceiro.forEach(cliente => {
+                if (cliente.diaVencimento) {
+                    const dia = cliente.diaVencimento;
+                    if (!recebimentosPorDia[dia]) {
+                        recebimentosPorDia[dia] = [];
+                    }
+                    
+                    // Calcular décimo terceiro
+                    let decimo13Total = 0;
+                    let parcela1 = 0;
+                    let parcela2 = 0;
+                    
+                    if ((mesSelecionado === 11 || mesSelecionado === 12)) { // Novembro ou Dezembro
+                        const dataStr = cliente.dataFechamento || cliente.dataFechamentoContrato;
+                        const dataFechamento = new Date(dataStr);
+                        const anoContrato = dataFechamento.getFullYear();
+                        const mesContrato = dataFechamento.getMonth() + 1;
+                        
+                        if (anoContrato < anoSelecionado) {
+                            // Contrato anterior ao ano atual: 13º integral
+                            decimo13Total = cliente.valorContrato;
+                        } else if (anoContrato === anoSelecionado) {
+                            // Contrato no mesmo ano: proporcional
+                            const mesesRestantes = 12 - mesContrato + 1;
+                            decimo13Total = (cliente.valorContrato * mesesRestantes) / 12;
+                        }
+                        
+                        // Dividir em 2 parcelas
+                        parcela1 = decimo13Total / 2;
+                        parcela2 = decimo13Total / 2;
+                    }
+                    
+                    recebimentosPorDia[dia].push({
+                        cliente: cliente.razaoSocial,
+                        valor: cliente.valorContrato,
+                        dataFechamento: cliente.dataFechamento || cliente.dataFechamentoContrato || '-',
+                        decimo13Total: decimo13Total,
+                        parcela1: parcela1,
+                        parcela2: parcela2,
+                        parceiro: cliente.parceiroResponsavel || 'N/A'
+                    });
+                }
+            });
+            
+            // Ordenar dias
+            const diasOrdenados = Object.keys(recebimentosPorDia).map(Number).sort((a, b) => a - b);
+            
+            const tbody = document.getElementById('relatorioRecebimentosTable');
+            tbody.innerHTML = '';
+            
+            let totalDia = 0;
+            let diaAnterior = null;
+            let totalMensal = 0;
+            let totalDecimo13Mensal = 0;
+            let totalParcela1Mensal = 0;
+            let totalParcela2Mensal = 0;
+            
+            diasOrdenados.forEach(dia => {
+                recebimentosPorDia[dia].forEach((rec, index) => {
+                    const dataVencimento = new Date(anoSelecionado, mesSelecionado - 1, dia);
+                    const dataVencStr = formatarData(dataVencimento);
+                    
+                    if (index === 0 && dia !== diaAnterior) {
+                        totalDia = 0;
+                        diaAnterior = dia;
+                    }
+                    
+                    totalDia += rec.valor;
+                    totalMensal += rec.valor;
+                    totalDecimo13Mensal += rec.decimo13Total;
+                    totalParcela1Mensal += rec.parcela1;
+                    totalParcela2Mensal += rec.parcela2;
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${dataVencStr}</td>
+                            <td>${rec.cliente}</td>
+                            <td>${parceiroId === 'TODOS' ? rec.parceiro : parceiroNome}</td>
+                            <td>R$ ${rec.valor.toFixed(2).replace('.', ',')}</td>
+                            <td>${formatarData(dataVencimento)}</td>
+                            <td>${formatarData(rec.dataFechamento)}</td>
+                            <td>R$ ${rec.decimo13Total.toFixed(2).replace('.', ',')}</td>
+                            <td>R$ ${rec.parcela1.toFixed(2).replace('.', ',')}</td>
+                            <td>R$ ${rec.parcela2.toFixed(2).replace('.', ',')}</td>
+                        </tr>
+                    `;
+                    
+                    // Adicionar linha de total do dia
+                    if (index === recebimentosPorDia[dia].length - 1) {
+                        const totalDecimo = recebimentosPorDia[dia].reduce((sum, r) => sum + r.decimo13Total, 0);
+                        const totalParcela1 = recebimentosPorDia[dia].reduce((sum, r) => sum + r.parcela1, 0);
+                        const totalParcela2 = recebimentosPorDia[dia].reduce((sum, r) => sum + r.parcela2, 0);
+                        
+                        tbody.innerHTML += `
+                            <tr style="background-color: #f0f0f0; font-weight: bold;">
+                                <td colspan="3">TOTAL DO DIA ${dia.toString().padStart(2, '0')}</td>
+                                <td>R$ ${totalDia.toFixed(2).replace('.', ',')}</td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td>R$ ${totalDecimo.toFixed(2).replace('.', ',')}</td>
+                                <td>R$ ${totalParcela1.toFixed(2).replace('.', ',')}</td>
+                                <td>R$ ${totalParcela2.toFixed(2).replace('.', ',')}</td>
+                            </tr>
+                        `;
+                    }
+                });
+            });
+            
+            // Adicionar linha de total mensal
+            tbody.innerHTML += `
+                <tr style="background-color: #4472C4; color: white; font-weight: bold; font-size: 1.1em;">
+                    <td colspan="3">TOTAL DO MES</td>
+                    <td>R$ ${totalMensal.toFixed(2).replace('.', ',')}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>R$ ${totalDecimo13Mensal.toFixed(2).replace('.', ',')}</td>
+                    <td>R$ ${totalParcela1Mensal.toFixed(2).replace('.', ',')}</td>
+                    <td>R$ ${totalParcela2Mensal.toFixed(2).replace('.', ',')}</td>
+                </tr>
+            `;
+        }
+
+        // Carregar parceiros ao inicializar
+        window.addEventListener('load', function() {
+            carregarParceiroRelatorioRecebimentos();
+        });
+
+        // ===== FUNÇÕES DE CONTAS PENDENTES =====
+        function atualizarTabelaContasPendentes() {
+            const tbody = document.getElementById('contasLeilaTable');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+            const hoje = new Date();
+            const mesAtual = new Date().toISOString().slice(0, 7);
+
+            // Pegar os pagamentos do mês atual
+            const pagamentosMes = previsaoPagamentos[mesAtual] || [];
+
+            let encontrouPendentes = false;
+
+            pagamentosMes.forEach(pagamento => {
+                if (!pagamento.vencimento) return;
+
+                const dataVencimento = new Date(pagamento.vencimento);
+                dataVencimento.setHours(0, 0, 0, 0);
+
+                // Ainda não venceu
+                if (dataVencimento >= hoje) return;
+
+                // Verifica se já foi paga
+                const paga = pagamento.pago || false;
+
+                if (paga) return;
+
+                encontrouPendentes = true;
+
+                const diasAtraso = Math.floor(
+                    (hoje - dataVencimento) / (1000 * 60 * 60 * 24)
+                );
+
+                tbody.innerHTML += `
+                    <tr style="background:#ffeeba;">
+                        <td>${pagamento.nome}</td>
+                        <td>R$ ${pagamento.valor.toFixed(2).replace('.', ',')}</td>
+                        <td>${formatarData(dataVencimento)}</td>
+                        <td style="color:#d9534f;">
+                            🚨 ${diasAtraso} dias em atraso
+                        </td>
+                        <td><span style="color:#ff6b6b;">🚨 ${diasAtraso} dias em atraso</span></td>
+                        <td>
+                            <button class="btn btn-success btn-small"
+                                onclick="pagarContaLeila('${pagamento.nome}', ${pagamento.valor})">
+                                Pagar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            if (!encontrouPendentes) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px; color: #999;">✅ Nenhuma conta pendente</td></tr>';
+            }
+        }
+
+        function pagarContaLeila(nome, valor) {
+            const hoje = new Date();
+            const mesAtual = new Date().toISOString().slice(0, 7);
+
+            // Marcar como pago em previsaoPagamentos
+            const pagamentosMes = previsaoPagamentos[mesAtual] || [];
+            pagamentosMes.forEach(pag => {
+                if (pag.nome === nome && !pag.pago) {
+                    pag.pago = true;
+                    pag.dataPagamento = new Date().toISOString().slice(0, 10);
+                }
+            });
+
+            // Adicionar no fluxo de caixa
+            fluxoCaixa.push({
+                id: Date.now(),
+                data: formatarData(hoje),
+                mes: mesAtual,
+                descricao: `Pagamento ${nome}`,
+                debito: valor,
+                credito: 0,
+                despesasEscritorio: 0,
+                retiradasLeila: 0,
+                parceiroId: '',
+                marcadoPagamento: true
+            });
+
+            salvarDados();
+            atualizarTabelaContasPendentes();
+            atualizarTabelaPrevisaoPagamentos();
+            atualizarFluxo();
+
+            alert(`✅ Pagamento de ${nome} marcado como pago!`);
+        }
+
+        function pagarContaLeila(descricao, valor) {
+            const hoje = new Date();
+            const mesAtual = new Date().toISOString().slice(0, 7);
+
+            fluxoCaixa.push({
+                id: Date.now(),
+                data: formatarData(hoje),
+                mes: mesAtual,
+                descricao: `Pagamento ${descricao}`,
+                debito: valor,
+                credito: 0,
+                despesasEscritorio: 0,
+                retiradasLeila: 0,
+                parceiroId: '',
+                marcadoPagamento: true
+            });
+
+            salvarDados();
+            atualizarTabelaContasPendentes();
+            atualizarFluxo();
+
+            alert(`✅ Pagamento de ${descricao} marcado como pago!`);
+        }
+    </script>
+</body>
+</html>
